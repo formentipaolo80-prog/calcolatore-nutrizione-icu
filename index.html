@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Nutrizione ICU · Toolkit clinico</title>
+<style>
+:root{
+  --bg:#f3f6fa;
+  --paper:#ffffff;
+  --ink:#172033;
+  --muted:#617086;
+  --line:#dce3ed;
+  --blue:#0a4b82;
+  --blue2:#0d659f;
+  --blue3:#eaf3fa;
+  --teal:#0d7b78;
+  --amber:#9a6500;
+  --amberbg:#fff7df;
+  --red:#a93535;
+  --redbg:#fff0f0;
+  --green:#1c6b48;
+  --greenbg:#edf8f2;
+  --shadow:0 8px 24px rgba(18,42,66,.08);
+  --radius:14px;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,Arial,Helvetica,sans-serif;line-height:1.42}
+button,input,select{font:inherit}
+button{cursor:pointer}
+a{color:var(--blue2)}
+.app{max-width:1440px;margin:0 auto;padding:18px}
+.hero{background:linear-gradient(135deg,#073e6b 0%,#0a5c91 60%,#0d7b78 100%);color:#fff;border-radius:20px;padding:22px 24px;box-shadow:var(--shadow)}
+.hero-top{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.hero h1{margin:0 0 4px;font-size:clamp(25px,3.2vw,40px);letter-spacing:-.02em}
+.hero p{margin:0;color:#dceaf5;font-size:15px}
+.brand{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#c8e2ef;margin-top:10px}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid rgba(255,255,255,.36);background:rgba(255,255,255,.1);color:#fff;border-radius:10px;padding:9px 12px;font-weight:700}
+.btn:hover{background:rgba(255,255,255,.17)}
+.btn.secondary{background:#fff;color:var(--blue);border-color:#fff}
+.nav{display:flex;gap:8px;overflow-x:auto;padding:12px 2px 6px;scrollbar-width:thin;position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 75%,rgba(243,246,250,0));}
+.nav button{border:1px solid var(--line);background:var(--paper);color:var(--ink);border-radius:999px;padding:9px 14px;white-space:nowrap;font-weight:750;box-shadow:0 2px 10px rgba(20,40,60,.03)}
+.nav button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.patient{margin-top:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
+.patient-grid{display:grid;grid-template-columns:1.5fr .85fr .65fr .85fr .85fr .75fr;gap:10px}
+label{display:block;font-size:12px;color:var(--muted);font-weight:750;margin-bottom:5px}
+input,select{width:100%;border:1px solid #cdd7e3;background:#fff;border-radius:9px;padding:9px 10px;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:#72a9cf;box-shadow:0 0 0 3px rgba(13,101,159,.10)}
+.unitwrap{position:relative}
+.unitwrap input{padding-right:46px}
+.unit{position:absolute;right:10px;top:34px;color:#7b889a;font-size:12px}
+.page{display:none;margin-top:12px}
+.page.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.card h2,.card h3{margin:0 0 10px;letter-spacing:-.01em}
+.card h2{font-size:20px}.card h3{font-size:16px}
+.card p{margin:6px 0;color:#425168}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-7{grid-column:span 7}.span-6{grid-column:span 6}.span-5{grid-column:span 5}.span-4{grid-column:span 4}.span-3{grid-column:span 3}
+.formgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.formgrid.three{grid-template-columns:repeat(3,1fr)}
+.formgrid.two{grid-template-columns:repeat(2,1fr)}
+.metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.metric{border:1px solid #d6e4ef;background:#f7fbfe;border-radius:12px;padding:11px 12px;min-height:86px}
+.metric strong{display:block;font-size:25px;line-height:1.12;color:var(--blue);letter-spacing:-.02em}
+.metric .k{font-size:11px;color:#6e7e92;font-weight:800;text-transform:uppercase;letter-spacing:.045em}
+.metric .sub{font-size:12px;color:#536378;margin-top:4px}
+.output{background:linear-gradient(135deg,#083f6d,#0c5d91);color:#fff;border:none}
+.output h2,.output h3{color:#fff}
+.output p,.output .small{color:#dcebf6}
+.output .metric{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
+.output .metric strong{color:#fff}.output .metric .k,.output .metric .sub{color:#dcebf6}
+.note{border-left:4px solid var(--blue2);background:var(--blue3);padding:10px 12px;border-radius:8px;color:#31465d;font-size:13px}
+.warn{border-left-color:#d29000;background:var(--amberbg)}
+.danger{border-left-color:var(--red);background:var(--redbg)}
+.good{border-left-color:var(--green);background:var(--greenbg)}
+.small{font-size:12px;color:var(--muted)}
+.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--blue2);font-weight:850;margin-bottom:7px}
+hr{border:none;border-top:1px solid var(--line);margin:14px 0}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+th{color:#4e5f75;background:#f6f8fb;font-weight:800}
+td input{min-width:88px;padding:7px 8px}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#e9f2f8;color:#285a7d}
+.pill.red{background:#fce8e8;color:#923838}.pill.amber{background:#fff0c8;color:#865900}.pill.green{background:#e7f6ee;color:#286947}
+.rule{display:grid;grid-template-columns:80px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.rule:last-child{border-bottom:none}
+.rule b{color:var(--blue)}
+.svgbox{background:#fbfdff;border:1px solid var(--line);border-radius:12px;padding:8px}
+svg{max-width:100%;height:auto;display:block}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:7px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:4px}.d1{background:#0a5c91}.d2{background:#0d7b78}
+.ref{padding:10px 0;border-bottom:1px solid var(--line)}.ref:last-child{border-bottom:none}
+.footer{padding:18px 4px 30px;color:#68778a;font-size:12px;text-align:center}
+.hidden{display:none!important}
+.statusline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.range{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.range input[type=range]{padding:0;border:none;box-shadow:none}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+@media(max-width:1050px){.patient-grid{grid-template-columns:repeat(3,1fr)}.span-8,.span-7,.span-6,.span-5,.span-4,.span-3{grid-column:span 12}.metric-grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.app{padding:10px}.hero{padding:18px}.patient-grid,.formgrid,.formgrid.three,.formgrid.two,.metric-grid{grid-template-columns:1fr}.card{padding:13px}.metric strong{font-size:23px}.nav{top:0}.unit{top:34px}}
+@media print{body{background:#fff}.hero,.nav,.actions{display:none}.patient,.card{box-shadow:none}.page{display:block!important;page-break-before:always}.page:first-of-type{page-break-before:auto}.app{max-width:none}.output{background:#fff!important;color:#000!important;border:1px solid #bbb}.output *{color:#000!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <div class="hero-top">
+      <div>
+        <h1>Nutrizione ICU · Toolkit clinico</h1>
+        <p>Calcolo nutrizionale senza calorimetria, bilancio azotato, calorimetria indiretta, BIVA, ecografia del quadricipite e disturbi del sodio.</p>
+        <div class="brand">edited by Paolo Formenti · versione HTML offline</div>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="window.print()">Stampa</button>
+        <button class="btn secondary" onclick="resetAll()">Reset dati</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" aria-label="Sezioni">
+    <button class="active" data-page="nutrition">Nutrizione</button>
+    <button data-page="calorimetry">Calorimetria</button>
+    <button data-page="biva">BIVA</button>
+    <button data-page="ultrasound">Eco quadricipite</button>
+    <button data-page="sodium">Sodio</button>
+    <button data-page="refs">Riferimenti</button>
+  </nav>
+
+  <section class="patient">
+    <div class="kicker">Dati paziente condivisi tra le pagine</div>
+    <div class="patient-grid">
+      <div><label>Identificativo / nome</label><input id="ptName" data-save placeholder="opzionale"></div>
+      <div><label>Sesso</label><select id="ptSex" data-save><option value="M">Maschio</option><option value="F">Femmina</option></select></div>
+      <div><label>Età</label><input id="ptAge" data-save type="number" min="18" max="110" value="65"></div>
+      <div class="unitwrap"><label>Peso attuale / dry weight</label><input id="ptWeight" data-save type="number" step="0.1" min="20" value="75"><span class="unit">kg</span></div>
+      <div class="unitwrap"><label>Altezza</label><input id="ptHeight" data-save type="number" step="1" min="120" value="175"><span class="unit">cm</span></div>
+      <div><label>Giorno ICU</label><input id="icuDay" data-save type="number" min="1" max="365" value="2"></div>
+    </div>
+  </section>
+
+  <main>
+    <section class="page active" id="page-nutrition">
+      <div class="grid">
+        <div class="card span-7">
+          <div class="kicker">1 · Pesi di calcolo</div>
+          <h2>BMI, peso ideale e peso aggiustato</h2>
+          <div class="metric-grid">
+            <div class="metric"><div class="k">Peso reale</div><strong id="outActualWeight">–</strong><div class="sub">kg</div></div>
+            <div class="metric"><div class="k">BMI</div><strong id="outBMI">–</strong><div class="sub" id="outBMIClass">–</div></div>
+            <div class="metric"><div class="k">Peso ideale</div><strong id="outIBW">–</strong><div class="sub">altezza² × 22,5</div></div>
+            <div class="metric"><div class="k">Adjusted BW</div><strong id="outAdjWeight">–</strong><div class="sub">IBW + 33% dell'eccesso</div></div>
+          </div>
+          <div class="metric" style="margin-top:10px"><div class="k">Peso usato dal calcolatore</div><strong id="outRefWeight">–</strong><div class="sub" id="outWeightLogic">–</div></div>
+          <div class="note" style="margin-top:12px">Regola del calcolatore del corso: <b>BMI ≤30 kg/m² → peso reale</b>; <b>BMI &gt;30 kg/m² → adjusted body weight</b>. L'Adjusted BW è calcolato come IBW + 0,33 × (peso reale − IBW).</div>
+        </div>
+
+        <div class="card output span-5">
+          <div class="kicker" style="color:#c8e2ef">Prescrizione energetica automatica</div>
+          <h2 id="outDayTitle">Giorno ICU</h2>
+          <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="metric"><div class="k">Fabbisogno stimato pieno</div><strong id="outEnergyBase">–</strong><div class="sub">20–25 kcal/kg/die</div></div>
+            <div class="metric"><div class="k">Quota del giorno</div><strong id="outEnergyFraction">–</strong><div class="sub" id="outEnergyPhase">–</div></div>
+            <div class="metric"><div class="k">Target lordo oggi</div><strong id="outEnergyPlanned">–</strong><div class="sub">prima delle kcal occulte</div></div>
+            <div class="metric"><div class="k">Da nutrizione EN/PN</div><strong id="outEnergyNet">–</strong><div class="sub">dopo kcal non nutrizionali</div></div>
+          </div>
+          <div id="energyPhaseNote" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
+        </div>
+
+        <div class="card span-12">
+          <div class="kicker">2 · Andamento clinico/metabolico</div>
+          <h2>Se compare una nuova fase acuta, il giorno di degenza da solo non basta</h2>
+          <div class="formgrid three">
+            <div>
+              <label>Situazione attuale</label>
+              <select id="metabolicState" data-save>
+                <option value="stable">Decorso stabile / in miglioramento</option>
+                <option value="sepsis">Nuova sepsi o recrudescenza acuta, emodinamicamente stabilizzata</option>
+                <option value="hyper">Sospetto ipermetabolismo / VO₂ aumentato ma non misurabile</option>
+                <option value="shock">Shock non controllato / escalation vasopressoria</option>
+              </select>
+            </div>
+            <div class="metric"><div class="k">Correzione del target</div><strong id="outMetabolicRule">–</strong><div class="sub" id="outMetabolicRuleSub">–</div></div>
+            <div class="metric"><div class="k">Target energetico applicato</div><strong id="outMetabolicTarget">–</strong><div class="sub">prima delle kcal non nutrizionali</div></div>
+          </div>
+          <div id="metabolicStateNote" class="note" style="margin-top:12px"></div>
+        </div>
+
+        <div class="card span-12">
+          <div class="kicker">3 · Calorie non nutrizionali</div>
+          <h2>Propofol, citrato in CRRT, glucosio EV e altre fonti</h2>
+          <div class="formgrid">
+            <div class="unitwrap"><label>Propofol</label><input id="propofolMl" data-save type="number" min="0" step="10" value="0"><span class="unit">mL/d</span></div>
+            <div class="unitwrap"><label>Citrato netto al paziente in CRRT</label><input id="citrateMmolH" data-save type="number" min="0" step="0.5" value="0"><span class="unit">mmol/h</span></div>
+            <div class="unitwrap"><label>Glucosio EV non nutrizionale</label><input id="ivGlucoseG" data-save type="number" min="0" step="5" value="0"><span class="unit">g/d</span></div>
+            <div class="unitwrap"><label>Altre kcal non nutrizionali</label><input id="otherNonNutri" data-save type="number" min="0" step="10" value="0"><span class="unit">kcal/d</span></div>
+          </div>
+          <div class="metric-grid" style="margin-top:12px">
+            <div class="metric"><div class="k">Propofol</div><strong id="outPropKcal">–</strong><div class="sub">1,1 kcal/mL</div></div>
+            <div class="metric"><div class="k">Citrato</div><strong id="outCitrateKcal">–</strong><div class="sub">0,59 kcal/mmol metabolizzato</div></div>
+            <div class="metric"><div class="k">Glucosio EV</div><strong id="outGlucoseKcal">–</strong><div class="sub">3,4 kcal/g</div></div>
+            <div class="metric"><div class="k">Totale occulto</div><strong id="outNonNutriTotal">–</strong><div class="sub" id="outNonNutri">–</div></div>
+          </div>
+          <div class="note warn" style="margin-top:12px">Per il citrato va inserita la quota che raggiunge realmente il paziente, al netto della rimozione extracorporea. Il campo “altre kcal” può comprendere altri apporti energetici non conteggiati nella miscela nutrizionale.</div>
+        </div>
+
+        <div class="card span-12">
+          <div class="kicker">4 · Via di somministrazione</div>
+          <h2>Enterale, parenterale o associazione EN + PN</h2>
+          <div class="formgrid three">
+            <div><label>Strategia nutrizionale</label><select id="nutritionRoute" data-save><option value="en">Enterale (EN) esclusiva</option><option value="pn">Parenterale (PN) esclusiva</option><option value="combo">EN + PN supplementare</option></select></div>
+            <div id="enShareField" class="unitwrap hidden"><label>EN tollerata / programmabile oggi</label><input id="enAvailableKcal" data-save type="number" min="0" step="50" value="0"><span class="unit">kcal/d</span></div>
+            <div><label>Nota</label><div class="small" style="padding:9px 0">Con EN + PN il calcolatore usa la quota EN inserita e calcola automaticamente la PN necessaria per raggiungere il target energetico del giorno.</div></div>
+          </div>
+          <div class="metric-grid" style="margin-top:12px">
+            <div class="metric"><div class="k">EN da somministrare</div><strong id="outENPrescription">–</strong><div class="sub">kcal/die</div></div>
+            <div class="metric"><div class="k">PN da somministrare</div><strong id="outPNPrescription">–</strong><div class="sub">kcal/die</div></div>
+            <div class="metric"><div class="k">Totale EN + PN</div><strong id="outRouteTotal">–</strong><div class="sub">escluse kcal occulte</div></div>
+            <div class="metric"><div class="k">Strategia</div><strong id="outRouteName">–</strong><div class="sub" id="outRouteShort">–</div></div>
+          </div>
+          <div id="routeNote" class="note" style="margin-top:12px"></div>
+        </div>
+
+        <div class="card span-5">
+          <div class="kicker">5 · Proteine</div>
+          <h2>Target e apporto effettivo</h2>
+          <div class="formgrid two">
+            <div id="proteinENWrap" class="unitwrap"><label>Proteine da EN</label><input id="proteinEN" data-save type="number" min="0" step="1" value="0"><span class="unit">g/d</span></div>
+            <div id="proteinPNWrap" class="unitwrap hidden"><label>Proteine / aminoacidi da PN</label><input id="proteinPN" data-save type="number" min="0" step="1" value="0"><span class="unit">g/d</span></div>
+          </div>
+          <div class="metric-grid" style="margin-top:12px;grid-template-columns:repeat(2,1fr)">
+            <div class="metric"><div class="k">Target proteico</div><strong id="outProteinTarget">–</strong><div class="sub">1,3 g/kg/die sul peso di riferimento</div></div>
+            <div class="metric"><div class="k">Proteine somministrate</div><strong id="outProteinIntake">–</strong><div class="sub" id="outProteinSources">–</div></div>
+            <div class="metric"><div class="k">Copertura</div><strong id="outProteinCoverage">–</strong><div class="sub" id="outProteinDeficit">–</div></div>
+            <div class="metric"><div class="k">Equivalente azoto</div><strong id="outProteinN">–</strong><div class="sub">proteine / 6,25</div></div>
+          </div>
+          <div class="small" style="margin-top:8px">ESPEN indica 1,3 g/kg/die come target da raggiungere progressivamente; non definisce una percentuale proteica obbligatoria per ogni singolo giorno di ICU.</div>
+        </div>
+
+        <div class="card span-7">
+          <div class="kicker">6 · Bilancio azotato</div>
+          <h2>Urea urinaria + variazione del pool corporeo di azoto</h2>
+          <div class="formgrid three">
+            <div><label>Input urinario</label><select id="urineNMode" data-save><option value="urea">Urea urine g/24 h</option><option value="uun">UUN g N/24 h</option></select></div>
+            <div class="unitwrap"><label id="urineNLabel">Urea urine</label><input id="urineNValue" data-save type="number" min="0" step="0.1" value="25"><span class="unit" id="urineNUnit">g/d</span></div>
+            <div><label>TBW per correzione del pool</label><select id="tbwMode" data-save><option value="excel">0,60 × peso reale · foglio Excel</option><option value="auto">Stima sesso/età</option><option value="manual">Manuale</option></select></div>
+            <div class="unitwrap"><label>Urea plasma ieri</label><input id="ureaYesterday" data-save type="number" min="0" step="1" value="50"><span class="unit">mg/dL</span></div>
+            <div class="unitwrap"><label>Urea plasma oggi</label><input id="ureaToday" data-save type="number" min="0" step="1" value="50"><span class="unit">mg/dL</span></div>
+            <div class="unitwrap"><label>TBW manuale</label><input id="tbwManual" data-save type="number" min="10" step="0.5" value="45"><span class="unit">L</span></div>
+            <div class="unitwrap"><label>Altre perdite di N misurate</label><input id="extraNLoss" data-save type="number" min="0" step="0.5" value="0"><span class="unit">g N/d</span></div>
+          </div>
+          <div class="small" style="margin-top:8px">Il calcolo aggiunge 3 g N/die per perdite non urinarie. Il campo “altre perdite” consente di aggiungere perdite misurate o stimate non comprese nella raccolta urinaria, per esempio durante CRRT.</div>
+        </div>
+
+        <div class="card output span-12">
+          <div class="kicker" style="color:#c8e2ef">Risultato metabolico</div>
+          <div class="metric-grid">
+            <div class="metric"><div class="k">UUN</div><strong id="outUUN">–</strong><div class="sub">g N/die</div></div>
+            <div class="metric"><div class="k">Δ pool azotato</div><strong id="outDeltaPool">–</strong><div class="sub">g N/die</div></div>
+            <div class="metric"><div class="k">Perdita N totale</div><strong id="outNLoss">–</strong><div class="sub">UUN + Δpool + 3 + extra</div></div>
+            <div class="metric"><div class="k">Introito N</div><strong id="outNIntake">–</strong><div class="sub">proteine EN/PN / 6,25</div></div>
+          </div>
+          <div class="metric-grid" style="margin-top:9px">
+            <div class="metric"><div class="k">Bilancio N</div><strong id="outNBalance">–</strong><div class="sub">g N/die</div></div>
+            <div class="metric"><div class="k">Bilancio proteico</div><strong id="outProteinBalance">–</strong><div class="sub">g proteine/die</div></div>
+            <div class="metric" style="grid-column:span 2"><div class="k">Grado di catabolismo</div><strong id="outCatabolism">–</strong><div class="sub" id="outCatabolicClass">–</div></div>
+          </div>
+          <div id="nitrogenWarning" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
+        </div>
+
+        <div class="card span-12">
+          <div class="kicker">Lettura rapida per il corso</div>
+          <div class="rule"><b>Peso</b><div>Il calcolatore usa il peso reale fino a BMI 30 e l'Adjusted BW oltre BMI 30, secondo la regola impostata per questo corso.</div></div>
+          <div class="rule"><b>Energia</b><div>20–25 kcal/kg/die sul peso di riferimento. La quota viene impostata automaticamente in base al giorno ICU: giorno 1 = 30%, giorno 2 = 50%, giorni 3–7 = 70%, dal giorno 8 = 100%. Le percentuali giornaliere sono una progressione didattica; ESPEN 2023 stabilisce il principio di progressione e, se si usano formule predittive, raccomanda un approccio ipocalorico nella prima settimana, con un tetto operativo intorno al 70% del fabbisogno stimato.</div></div>
+          <div class="rule"><b>Nuova fase acuta</b><div>Una nuova sepsi/recrudescenza tardiva viene trattata dal calcolatore come un ritorno prudenziale alla fase acuta: se il paziente è stabilizzato, il target calorico viene limitato al 50% del fabbisogno stimato e poi rivalutato. Se si sospetta ipermetabolismo/VO₂ aumentato senza poterlo misurare, il programma non aumenta le calorie e mantiene un tetto del 70%: è una regola prudenziale didattica, non un cut-off ESPEN specifico. In shock non controllato la prescrizione automatica viene sospesa.</div></div>
+          <div class="rule"><b>EN / PN</b><div>EN è la via preferita quando praticabile. Se EN è controindicata, la PN è prevista entro 3–7 giorni; in caso di EN insufficiente, la PN può essere usata come supplemento dopo aver tentato di ottimizzare la tolleranza enterale.</div></div>
+          <div class="rule"><b>Proteine</b><div>Target 1,3 g/kg/die, da raggiungere progressivamente. L'apporto effettivo viene sommato da EN e PN e usato direttamente nel bilancio azotato.</div></div>
+          <div class="rule"><b>Catabolismo</b><div>La classificazione assente/lieve/moderato/grave riproduce le soglie operative del foglio: &lt;5, 5–10, 10–15, &gt;15 g N/die di perdita totale.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-calorimetry">
+      <div class="grid">
+        <div class="card span-6">
+          <div class="kicker">Calorimetria indiretta</div>
+          <h2>VO₂, VCO₂, RQ e Weir</h2>
+          <div class="formgrid two">
+            <div class="unitwrap"><label>VO₂</label><input id="vo2" data-save type="number" min="0" step="1" value="220"><span class="unit">mL/min</span></div>
+            <div class="unitwrap"><label>VCO₂</label><input id="vco2" data-save type="number" min="0" step="1" value="180"><span class="unit">mL/min</span></div>
+            <div class="unitwrap"><label>Azoto urinario (opzionale)</label><input id="calUN" data-save type="number" min="0" step="0.1" value="0"><span class="unit">g/d</span></div>
+            <div class="unitwrap"><label>Intake energetico attuale</label><input id="currentKcal" data-save type="number" min="0" step="10" value="1200"><span class="unit">kcal/d</span></div>
+          </div>
+          <div class="note" style="margin-top:12px">Weir: EE = 1,44 × (3,941 × VO₂ + 1,106 × VCO₂) − 2,17 × N urinario. Se l'azoto non è disponibile, il termine correttivo viene omesso.</div>
+        </div>
+        <div class="card output span-6">
+          <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="metric"><div class="k">EE Weir</div><strong id="outWeir">–</strong><div class="sub">kcal/die</div></div>
+            <div class="metric"><div class="k">RQ</div><strong id="outRQ">–</strong><div class="sub" id="outRQText">–</div></div>
+            <div class="metric"><div class="k">VCO₂-only</div><strong id="outVCO2EE">–</strong><div class="sub">VCO₂ × 8,19</div></div>
+            <div class="metric"><div class="k">Copertura attuale</div><strong id="outEnergyCoverage">–</strong><div class="sub">intake / EE Weir</div></div>
+          </div>
+          <div id="calPhaseTarget" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
+        </div>
+        <div class="card span-6">
+          <h3>Parametri da guardare prima del numero finale</h3>
+          <table><tbody>
+            <tr><th>VO₂</th><td>Consumo di O₂. Va interpretato insieme a VCO₂, stabilità clinica e qualità della misura.</td></tr>
+            <tr><th>VCO₂</th><td>Produzione di CO₂. Può essere usata anche come stima alternativa dell'EE quando la calorimetria non è disponibile.</td></tr>
+            <tr><th>RQ = VCO₂/VO₂</th><td>Indicatore del mix di substrati e possibile campanello di overfeeding o artefatto quando estremo.</td></tr>
+            <tr><th>EE / REE</th><td>Il dato misurato è preferibile alle equazioni predittive nel paziente ventilato.</td></tr>
+          </tbody></table>
+        </div>
+        <div class="card span-6">
+          <h3>Qualità della misura</h3>
+          <div class="note warn">Interpretare con cautela se la ventilazione o la FiO₂ stanno cambiando, se esistono perdite importanti dal circuito, drenaggi con fuga aerea, agitazione/procedure recenti o scambio gassoso extracorporeo. Il valore utile è quello ottenuto in condizioni il più possibile stabili e riproducibili.</div>
+          <div class="statusline"><span class="pill">trend seriale</span><span class="pill">stato clinico</span><span class="pill">kcal non nutrizionali</span><span class="pill">fase di malattia</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-biva">
+      <div class="grid">
+        <div class="card span-6">
+          <div class="kicker">BIVA · dati grezzi</div>
+          <h2>Rz, Xc, PhA e vettore normalizzato per altezza</h2>
+          <div class="formgrid two">
+            <div class="unitwrap"><label>Rz attuale</label><input id="rz" data-save type="number" min="1" step="0.1" value="500"><span class="unit">Ω</span></div>
+            <div class="unitwrap"><label>Xc attuale</label><input id="xc" data-save type="number" min="0" step="0.1" value="45"><span class="unit">Ω</span></div>
+            <div class="unitwrap"><label>Rz precedente</label><input id="rz0" data-save type="number" min="1" step="0.1" value="520"><span class="unit">Ω</span></div>
+            <div class="unitwrap"><label>Xc precedente</label><input id="xc0" data-save type="number" min="0" step="0.1" value="46"><span class="unit">Ω</span></div>
+          </div>
+          <div class="note" style="margin-top:12px">In ICU, quando i fluidi cambiano rapidamente, le stime convenzionali di FFM/lean mass vanno interpretate con prudenza. Il trend di Rz, Xc, PhA e del vettore BIVA è spesso più informativo del singolo valore stimato.</div>
+        </div>
+        <div class="card output span-6">
+          <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="metric"><div class="k">PhA</div><strong id="outPha">–</strong><div class="sub">gradi</div></div>
+            <div class="metric"><div class="k">Z</div><strong id="outZ">–</strong><div class="sub">Ω</div></div>
+            <div class="metric"><div class="k">Rz/H</div><strong id="outRzH">–</strong><div class="sub">Ω/m</div></div>
+            <div class="metric"><div class="k">Xc/H</div><strong id="outXcH">–</strong><div class="sub">Ω/m</div></div>
+          </div>
+          <div id="bivaTrendText" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
+        </div>
+        <div class="card span-7">
+          <h3>Vettore corrente vs precedente</h3>
+          <div class="svgbox"><svg id="bivaPlot" viewBox="0 0 640 360" role="img" aria-label="Grafico BIVA semplificato"></svg></div>
+          <div class="legend"><span><i class="dot d1"></i>precedente</span><span><i class="dot d2"></i>attuale</span><span>Grafico descrittivo, senza ellissi di riferimento.</span></div>
+        </div>
+        <div class="card span-5">
+          <h3>Come leggere i parametri</h3>
+          <div class="rule"><b>Rz</b><div>Componente resistiva, fortemente influenzata dall'acqua corporea conduttiva.</div></div>
+          <div class="rule"><b>Xc</b><div>Componente reattiva, legata alle proprietà capacitive delle membrane e dei tessuti.</div></div>
+          <div class="rule"><b>PhA</b><div>arctan(Xc/Rz). Va confrontato con popolazione, dispositivo e trend; non usare un cut-off universale.</div></div>
+          <div class="rule"><b>Z/H</b><div>La lunghezza del vettore cambia con lo stato di idratazione. Un accorciamento seriale è compatibile con maggiore idratazione, un allungamento con il contrario.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-ultrasound">
+      <div class="grid">
+        <div class="card span-6">
+          <div class="kicker">Ecografia muscolare periferica</div>
+          <h2>Quadricipite: RF + VI, CSA, pennation, grayscale</h2>
+          <div class="formgrid two">
+            <div class="unitwrap"><label>RF thickness attuale</label><input id="rfT" data-save type="number" min="0" step="0.1" value="10"><span class="unit">mm</span></div>
+            <div class="unitwrap"><label>VI thickness attuale</label><input id="viT" data-save type="number" min="0" step="0.1" value="12"><span class="unit">mm</span></div>
+            <div class="unitwrap"><label>RF CSA attuale</label><input id="rfCSA" data-save type="number" min="0" step="0.1" value="5"><span class="unit">cm²</span></div>
+            <div class="unitwrap"><label>Pennation angle attuale</label><input id="penn" data-save type="number" min="0" step="0.1" value="12"><span class="unit">°</span></div>
+            <div><label>Grayscale attuale</label><input id="gray" data-save type="number" min="0" max="255" step="1" value="70"></div>
+            <div><label>Lato / protocollo</label><input id="usProtocol" data-save value="Dx · stesso landmark"></div>
+          </div>
+        </div>
+        <div class="card span-6">
+          <div class="kicker">Confronto seriale</div>
+          <div class="formgrid two">
+            <div class="unitwrap"><label>RF thickness T0</label><input id="rfT0" data-save type="number" min="0" step="0.1" value="11"><span class="unit">mm</span></div>
+            <div class="unitwrap"><label>VI thickness T0</label><input id="viT0" data-save type="number" min="0" step="0.1" value="13"><span class="unit">mm</span></div>
+            <div class="unitwrap"><label>RF CSA T0</label><input id="rfCSA0" data-save type="number" min="0" step="0.1" value="5.5"><span class="unit">cm²</span></div>
+            <div class="unitwrap"><label>Pennation T0</label><input id="penn0" data-save type="number" min="0" step="0.1" value="12.5"><span class="unit">°</span></div>
+            <div><label>Grayscale T0</label><input id="gray0" data-save type="number" min="0" max="255" step="1" value="60"></div>
+          </div>
+        </div>
+        <div class="card output span-12">
+          <div class="metric-grid">
+            <div class="metric"><div class="k">QMLT attuale</div><strong id="outQMLT">–</strong><div class="sub">RF + VI</div></div>
+            <div class="metric"><div class="k">Δ QMLT</div><strong id="outQMLTDelta">–</strong><div class="sub">vs T0</div></div>
+            <div class="metric"><div class="k">Δ RF CSA</div><strong id="outCSADelta">–</strong><div class="sub">vs T0</div></div>
+            <div class="metric"><div class="k">Δ grayscale</div><strong id="outGrayDelta">–</strong><div class="sub">vs T0</div></div>
+          </div>
+        </div>
+        <div class="card span-12">
+          <div class="rule"><b>QMLT</b><div>Quadriceps Muscle Layer Thickness = spessore del rectus femoris + spessore del vastus intermedius.</div></div>
+          <div class="rule"><b>RF CSA</b><div>Area di sezione trasversa del rectus femoris. Utile soprattutto come misura seriale se landmark e compressione della sonda sono riproducibili.</div></div>
+          <div class="rule"><b>Pennation</b><div>Nel materiale didattico fornito, valori sani sono riportati circa 10–15°; in ICU il trend è più utile di un cut-off isolato.</div></div>
+          <div class="rule"><b>Grayscale</b><div>Un aumento dell'ecogenicità può accompagnare edema, infiltrazione/fibrosi e alterazioni qualitative del muscolo; non è una misura specifica di una singola componente.</div></div>
+          <div class="note warn" style="margin-top:10px">La ripetibilità dipende dal protocollo: stesso lato, landmark, posizione, pressione della sonda, gain e profondità.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-sodium">
+      <div class="grid">
+        <div class="card span-7">
+          <div class="kicker">Disturbi del sodio · modulo ripreso dal progetto EGA</div>
+          <h2>Disnatremia → bilancio Na/K/H₂O → rene → conclusione</h2>
+          <div class="formgrid three">
+            <div class="unitwrap"><label>Na plasmatico</label><input id="pNa" data-save type="number" step="0.1" value="140"><span class="unit">mmol/L</span></div>
+            <div class="unitwrap"><label>Na precedente</label><input id="pNa0" data-save type="number" step="0.1" value="140"><span class="unit">mmol/L</span></div>
+            <div class="unitwrap"><label>Na osservato finale (opz.)</label><input id="pNaObserved" data-save type="number" step="0.1"><span class="unit">mmol/L</span></div>
+            <div class="unitwrap"><label>Glucosio</label><input id="glucose" data-save type="number" min="0" step="1" value="100"><span class="unit">mg/dL</span></div>
+            <div class="unitwrap"><label>BUN (azoto ureico)</label><input id="bun" data-save type="number" min="0" step="1" value="20"><span class="unit">mg/dL</span></div>
+            <div class="unitwrap"><label>Osm misurata</label><input id="osmMeasured" data-save type="number" min="0" step="1"><span class="unit">mOsm/kg</span></div>
+            <div class="unitwrap"><label>Uosm</label><input id="uOsm" data-save type="number" min="0" step="1" value="400"><span class="unit">mOsm/kg</span></div>
+            <div><label>Stato volemico</label><select id="volumeStatus" data-save><option>euvolemia</option><option>ipovolemia</option><option>ipervolemia</option><option>incerto</option></select></div>
+            <div><label>Durata</label><select id="naDuration" data-save><option value="unknown">non nota</option><option value="acute">≤48 h</option><option value="chronic">>48 h / cronica</option></select></div>
+            <div><label>Sintomi neurologici</label><select id="naSymptoms" data-save><option value="none">assenti/minimi</option><option value="moderate">moderati</option><option value="severe">gravi</option></select></div>
+          </div>
+        </div>
+        <div class="card output span-5">
+          <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
+            <div class="metric"><div class="k">Classificazione</div><strong id="outNaClass">–</strong><div class="sub" id="outNaContext">–</div></div>
+            <div class="metric"><div class="k">Osm calcolata</div><strong id="outOsm">–</strong><div class="sub">2Na + gluc/18 + BUN/2,8</div></div>
+            <div class="metric"><div class="k">Tonicità effettiva</div><strong id="outTonicity">–</strong><div class="sub">2Na + gluc/18</div></div>
+            <div class="metric"><div class="k">Uosm</div><strong id="outUosm">–</strong><div class="sub" id="outUosmText">–</div></div>
+          </div>
+        </div>
+
+        <div class="card span-12">
+          <h3>Bilancio 24 h di acqua, Na e K</h3>
+          <div class="table-wrap">
+            <table id="balanceTable">
+              <thead><tr><th>Flusso</th><th>Descrizione</th><th>Volume L</th><th>Na mmol/L</th><th>K mmol/L</th><th>Na+K mEq</th></tr></thead>
+              <tbody>
+                <tr data-flow="in"><td><span class="pill green">ENTRATA</span></td><td><input data-save id="inDesc1" value="Fluidi 1"></td><td><input data-save class="bal-vol" type="number" step="0.1" value="1"></td><td><input data-save class="bal-na" type="number" step="1" value="140"></td><td><input data-save class="bal-k" type="number" step="1" value="0"></td><td class="bal-eq">–</td></tr>
+                <tr data-flow="in"><td><span class="pill green">ENTRATA</span></td><td><input data-save id="inDesc2" value="Fluidi 2"></td><td><input data-save class="bal-vol" type="number" step="0.1" value="0"></td><td><input data-save class="bal-na" type="number" step="1" value="0"></td><td><input data-save class="bal-k" type="number" step="1" value="0"></td><td class="bal-eq">–</td></tr>
+                <tr data-flow="in"><td><span class="pill green">ENTRATA</span></td><td><input data-save id="inDesc3" value="Fluidi 3"></td><td><input data-save class="bal-vol" type="number" step="0.1" value="0"></td><td><input data-save class="bal-na" type="number" step="1" value="0"></td><td><input data-save class="bal-k" type="number" step="1" value="0"></td><td class="bal-eq">–</td></tr>
+                <tr data-flow="out"><td><span class="pill red">USCITA</span></td><td><input data-save id="outDesc1" value="Urine"></td><td><input data-save class="bal-vol" id="urineVolBalance" type="number" step="0.1" value="1"></td><td><input data-save class="bal-na" id="uNa" type="number" step="1" value="60"></td><td><input data-save class="bal-k" id="uK" type="number" step="1" value="30"></td><td class="bal-eq">–</td></tr>
+                <tr data-flow="out"><td><span class="pill red">USCITA</span></td><td><input data-save id="outDesc2" value="Drenaggi/GI"></td><td><input data-save class="bal-vol" type="number" step="0.1" value="0"></td><td><input data-save class="bal-na" type="number" step="1" value="0"></td><td><input data-save class="bal-k" type="number" step="1" value="0"></td><td class="bal-eq">–</td></tr>
+                <tr data-flow="out"><td><span class="pill red">USCITA</span></td><td><input data-save id="outDesc3" value="Altro"></td><td><input data-save class="bal-vol" type="number" step="0.1" value="0"></td><td><input data-save class="bal-na" type="number" step="1" value="0"></td><td><input data-save class="bal-k" type="number" step="1" value="0"></td><td class="bal-eq">–</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="formgrid" style="margin-top:12px">
+            <div class="unitwrap"><label>Perdite insensibili</label><input id="insensible" data-save type="number" min="0" step="0.1" value="0.8"><span class="unit">L/d</span></div>
+            <div class="unitwrap"><label>Na+K diretti in entrata</label><input id="directInNK" data-save type="number" step="1" value="0"><span class="unit">mEq</span></div>
+            <div class="unitwrap"><label>Na+K diretti in uscita</label><input id="directOutNK" data-save type="number" step="1" value="0"><span class="unit">mEq</span></div>
+            <div><label>TBW per stima Na finale</label><select id="naTBWMode" data-save><option value="auto">stimata</option><option value="manual">manuale</option></select></div>
+            <div class="unitwrap"><label>TBW manuale</label><input id="naTBWManual" data-save type="number" min="5" step="0.5" value="45"><span class="unit">L</span></div>
+          </div>
+        </div>
+
+        <div class="card output span-12">
+          <div class="metric-grid">
+            <div class="metric"><div class="k">Δ acqua</div><strong id="outWaterBal">–</strong><div class="sub">entrate − uscite − insensibili</div></div>
+            <div class="metric"><div class="k">Δ Na+K</div><strong id="outNKBal">–</strong><div class="sub">mEq/24 h</div></div>
+            <div class="metric"><div class="k">Equivalente isotono</div><strong id="outIsoEq">–</strong><div class="sub">Δ(Na+K)/PNa</div></div>
+            <div class="metric"><div class="k">EFWB</div><strong id="outEFWB">–</strong><div class="sub">ΔV − Δ(Na+K)/PNa</div></div>
+          </div>
+          <div class="metric-grid" style="margin-top:9px">
+            <div class="metric"><div class="k">(UNa+UK)/PNa</div><strong id="outUrineRatio">–</strong><div class="sub">rapporto urinario</div></div>
+            <div class="metric"><div class="k">CH₂Oe</div><strong id="outEFWC">–</strong><div class="sub">L/die</div></div>
+            <div class="metric"><div class="k">Na finale stimato</div><strong id="outPredNa">–</strong><div class="sub">mass balance semplificato</div></div>
+            <div class="metric"><div class="k">Osservato − previsto</div><strong id="outNaResidual">–</strong><div class="sub">mmol/L</div></div>
+          </div>
+          <div id="naDirection" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
+        </div>
+
+        <div class="card span-6">
+          <h3>Simulatore Adrogué–Madias · solo orientativo</h3>
+          <div class="formgrid three">
+            <div class="unitwrap"><label>Na infusato</label><input id="infNa" data-save type="number" step="1" value="154"><span class="unit">mmol/L</span></div>
+            <div class="unitwrap"><label>K infusato</label><input id="infK" data-save type="number" step="1" value="0"><span class="unit">mmol/L</span></div>
+            <div class="unitwrap"><label>Volume</label><input id="infVol" data-save type="number" min="0" step="0.1" value="1"><span class="unit">L</span></div>
+          </div>
+          <div class="metric" style="margin-top:12px"><div class="k">ΔNa stimato</div><strong id="outAdrogue">–</strong><div class="sub">(Na+K infusato − PNa)/(TBW+1) × volume</div></div>
+          <div class="note danger" style="margin-top:10px">Non è un prescrittore automatico. La variazione reale dipende da urine, K, perdite, acqua endogena, diuresi osmotica e variazioni nel tempo.</div>
+        </div>
+        <div class="card span-6">
+          <h3>Lettura clinica del modulo</h3>
+          <div id="sodiumInterpretation"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-refs">
+      <div class="grid">
+        <div class="card span-12">
+          <div class="kicker">Fonti principali</div>
+          <h2>Riferimenti usati in questa prima versione</h2>
+          <div class="ref"><b>ESPEN 2023</b><br>Singer P, Reintam Blaser A, Berger MM, et al. <i>ESPEN practical and partially revised guideline: Clinical nutrition in the intensive care unit.</i> Clinical Nutrition. 2023;42:1671–1689. <a href="https://www.espen.org/files/ESPEN-Guidelines/ESPEN_practical_and_partially_revised_guideline_Clinical_nutrition_in_the_intensive_care_unit.pdf" target="_blank" rel="noopener">PDF ESPEN</a></div>
+          <div class="ref"><b>Guideline caricata nel progetto</b><br>Il PDF fornito è la guideline completa pubblicata nel 2019. È stato usato come background, ma le regole operative del calcolatore sono state riallineate alla revisione pratica ESPEN 2023.</div>
+          <div class="ref"><b>Calorie non nutrizionali in CRRT</b><br>Il citrato metabolizzato fornisce circa 0,59 kcal/mmol; il guadagno effettivo dipende da dose e rimozione extracorporea. Rogers AR, Jenkins B. <i>Calorie provision from citrate anticoagulation in continuous renal replacement therapy in critical care.</i> J Intensive Care Soc. 2021;22:279–284.</div>
+          <div class="ref"><b>BIVA</b><br>Materiale didattico “Bioimpedenziometria in terapia intensiva”, Talluri / Formenti, 2026: parametri grezzi, phase angle, vector analysis, limiti delle equazioni di composizione corporea in presenza di fluid shifts.</div>
+          <div class="ref"><b>Ecografia muscolare</b><br>Materiale didattico “Ecografia muscolare · muscolo periferico in terapia intensiva”, Formenti: RF CSA, RF e VI thickness, QMLT, pennation angle, grayscale.</div>
+          <div class="ref"><b>Calorimetria</b><br>Weir JB. New methods for calculating metabolic rate with special reference to protein metabolism. J Physiol. 1949. La stima VCO₂-only (VCO₂ × 8,19) è riportata anche nella linea guida ESPEN.</div>
+          <div class="ref"><b>Sodio</b><br>Modulo ricostruito dalla versione del progetto EGA: bilancio H₂O/Na/K, equivalente isotono, electrolyte-free water balance, CH₂Oe e simulatore Adrogué–Madias come stima orientativa.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="footer">Strumento di supporto clinico e didattico. I risultati richiedono verifica rispetto al contesto del singolo paziente e non sostituiscono il giudizio clinico.</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const n=id=>{const v=parseFloat($(id)?.value);return Number.isFinite(v)?v:0};
+const fmt=(x,d=1)=>Number.isFinite(x)?x.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
+const pct=x=>Number.isFinite(x)?fmt(x*100,0)+'%':'–';
+
+function saveState(){
+  const data={};
+  document.querySelectorAll('[data-save]').forEach((el,i)=>{
+    const key=el.id||el.dataset.key||('anon_'+i);
+    data[key]=el.value;
+  });
+  localStorage.setItem('icuNutritionToolkit',JSON.stringify(data));
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem('icuNutritionToolkit');
+    if(!raw) return false;
+    const data=JSON.parse(raw||'{}');
+    document.querySelectorAll('[data-save]').forEach((el,i)=>{
+      const key=el.id||el.dataset.key||('anon_'+i);
+      if(data[key]!==undefined) el.value=data[key];
+    });
+    return true;
+  }catch(e){return false}
+}
+function resetAll(){
+  if(!confirm('Azzerare tutti i dati salvati localmente?')) return;
+  localStorage.removeItem('icuNutritionToolkit');
+  location.reload();
+}
+
+function patient(){
+  const w=n('ptWeight'), hcm=n('ptHeight'), hm=hcm/100, sex=$('ptSex').value, age=n('ptAge');
+  const bmi=w&&hm?w/(hm*hm):0;
+  const ibwBMI=22.5*hm*hm;
+  const adj=ibwBMI + 0.33*Math.max(0,w-ibwBMI);
+  const ref=bmi>30?adj:w;
+  let tbwCoef=sex==='F'?0.50:0.60;
+  if(age>=65) tbwCoef-=0.05;
+  const tbw=w*tbwCoef;
+  return {w,hcm,hm,sex,age,bmi,ibwBMI,adj,ref,tbw,tbwCoef,day:Math.max(1,n('icuDay'))};
+}
+function bmiClass(b){
+  if(!b)return '–'; if(b<18.5)return 'sottopeso'; if(b<25)return 'normopeso'; if(b<30)return 'sovrappeso'; if(b<35)return 'obesità I'; if(b<40)return 'obesità II'; return 'obesità III';
+}
+function energyFractionForDay(day){
+  if(day<=1) return 0.30;
+  if(day===2) return 0.50;
+  if(day<=7) return 0.70;
+  return 1.00;
+}
+function energyPolicy(day){
+  const base=energyFractionForDay(day);
+  const state=$('metabolicState')?.value||'stable';
+  if(state==='sepsis'){
+    return {state,frac:Math.min(base,0.50),blocked:false,label:'max 50%',sub:'nuova fase acuta stabilizzata',note:'Nuova sepsi/recrudescenza: il calcolatore riduce il target come se il paziente fosse rientrato in una fase acuta. ESPEN 2023 suggerisce, nel paziente settico dopo stabilizzazione emodinamica, EN precoce e progressiva; il commento propone inizialmente una frazione del supporto pieno e successiva progressione secondo tolleranza. Qui viene usato un tetto didattico del 50% del fabbisogno stimato, da rivalutare ogni giorno.'};
+  }
+  if(state==='hyper'){
+    return {state,frac:Math.min(base,0.70),blocked:false,label:'max 70%',sub:'VO₂/EE non misurati',note:'Sospetto ipermetabolismo o VO₂ aumentato senza calorimetria: il calcolatore non aumenta il target sulla sola impressione clinica. Le formule predittive possono essere molto inaccurate; finché non è disponibile una misura o il quadro non si stabilizza, viene mantenuto prudenzialmente un massimo del 70% del fabbisogno stimato. Questa è una regola didattica conservativa, non una raccomandazione ESPEN specifica per il “VO₂ sospetto”.'};
+  }
+  if(state==='shock'){
+    return {state,frac:null,blocked:true,label:'STOP automatico',sub:'shock non controllato',note:'Shock non controllato o crescente supporto vasopressorio: il calcolatore non propone una quota calorica automatica. ESPEN 2023 raccomanda di ritardare l’EN finché gli obiettivi emodinamici e di perfusione non sono raggiunti; dopo stabilizzazione si può ripartire a bassa dose e progredire sorvegliando la tolleranza.'};
+  }
+  return {state,frac:base,blocked:false,label:fmt(base*100,0)+'%',sub:'progressione per giorno ICU',note:'Decorso stabile/in miglioramento: viene applicata la progressione automatica basata sul giorno ICU. Se compare una nuova fase acuta, selezionarla qui invece di continuare automaticamente verso il pieno target.'};
+}
+function rangeText(a,b,unit='kcal'){
+  if(!Number.isFinite(a)||!Number.isFinite(b)) return '–';
+  return Math.abs(a-b)<1?`${fmt(b,0)} ${unit}`:`${fmt(a,0)}–${fmt(b,0)} ${unit}`;
+}
+function proteinDelivered(){
+  const route=$('nutritionRoute')?.value||'en';
+  const en=n('proteinEN'), pn=n('proteinPN');
+  if(route==='en') return {total:en,en,pn:0};
+  if(route==='pn') return {total:pn,en:0,pn};
+  return {total:en+pn,en,pn};
+}
+function updateRouteVisibility(){
+  const route=$('nutritionRoute')?.value||'en';
+  $('enShareField')?.classList.toggle('hidden',route!=='combo');
+  $('proteinENWrap')?.classList.toggle('hidden',route==='pn');
+  $('proteinPNWrap')?.classList.toggle('hidden',route==='en');
+}
+
+function calcNutrition(){
+  const p=patient();
+  const policy=energyPolicy(p.day);
+  const frac=policy.frac;
+
+  $('outActualWeight').textContent=fmt(p.w,1)+' kg';
+  $('outBMI').textContent=fmt(p.bmi,1);
+  $('outBMIClass').textContent=bmiClass(p.bmi);
+  $('outIBW').textContent=fmt(p.ibwBMI,1)+' kg';
+  $('outAdjWeight').textContent=fmt(p.adj,1)+' kg';
+  $('outRefWeight').textContent=fmt(p.ref,1)+' kg';
+  $('outWeightLogic').textContent=p.bmi>30?'BMI >30 → Adjusted BW':'BMI ≤30 → peso reale';
+
+  const minEE=20*p.ref, maxEE=25*p.ref;
+  const plannedLow=policy.blocked?NaN:minEE*frac, plannedHigh=policy.blocked?NaN:maxEE*frac;
+  $('outDayTitle').textContent=`Giorno ICU ${p.day}`;
+  $('outEnergyBase').textContent=rangeText(minEE,maxEE);
+  $('outEnergyFraction').textContent=policy.blocked?'—':fmt(frac*100,0)+'%';
+  $('outEnergyPlanned').textContent=policy.blocked?'non automatizzato':rangeText(plannedLow,plannedHigh);
+  let phaseLabel='';
+  if(policy.state==='sepsis') phaseLabel='nuova fase acuta';
+  else if(policy.state==='hyper') phaseLabel='prudenza senza misura EE';
+  else if(policy.state==='shock') phaseLabel='instabilità emodinamica';
+  else if(p.day===1) phaseLabel='inizio prudente';
+  else if(p.day===2) phaseLabel='progressione';
+  else if(p.day<=7) phaseLabel='tetto prima settimana';
+  else phaseLabel='target pieno stimato';
+  $('outEnergyPhase').textContent=phaseLabel;
+  $('outMetabolicRule').textContent=policy.label;
+  $('outMetabolicRuleSub').textContent=policy.sub;
+  $('outMetabolicTarget').textContent=policy.blocked?'da definire dopo stabilizzazione':rangeText(plannedLow,plannedHigh);
+  $('metabolicStateNote').textContent=policy.note;
+  $('metabolicStateNote').className='note'+(policy.state==='shock'?' danger':policy.state==='sepsis'||policy.state==='hyper'?' warn':'');
+
+  const prop=n('propofolMl')*1.1;
+  const citrate=n('citrateMmolH')*24*0.59;
+  const glucose=n('ivGlucoseG')*3.4;
+  const other=n('otherNonNutri');
+  const nonNutri=prop+citrate+glucose+other;
+  $('outPropKcal').textContent=fmt(prop,0)+' kcal';
+  $('outCitrateKcal').textContent=fmt(citrate,0)+' kcal';
+  $('outGlucoseKcal').textContent=fmt(glucose,0)+' kcal';
+  $('outNonNutriTotal').textContent=fmt(nonNutri,0)+' kcal';
+  $('outNonNutri').textContent=`propofol ${fmt(prop,0)} · citrato ${fmt(citrate,0)} · glucosio ${fmt(glucose,0)} · altre ${fmt(other,0)}`;
+
+  const netLow=policy.blocked?NaN:Math.max(0,plannedLow-nonNutri), netHigh=policy.blocked?NaN:Math.max(0,plannedHigh-nonNutri);
+  $('outEnergyNet').textContent=policy.blocked?'—':rangeText(netLow,netHigh);
+
+  let phase='';
+  if(policy.state!=='stable'){
+    phase=policy.note;
+  }else if(p.day<=7){
+    phase=`Progressione automatica del corso: giorno 1 30%, giorno 2 50%, giorni 3–7 70% del fabbisogno stimato. ESPEN 2023 raccomanda, quando si usano formule predittive, nutrizione ipocalorica, non oltre circa il 70% nella prima settimana e di evitare il pieno target nelle prime 48–72 ore.`;
+  }else{
+    phase=`Dal giorno 8 il calcolatore propone il 100% del fabbisogno stimato 20–25 kcal/kg/die. In assenza di calorimetria questo resta un valore stimato da rivalutare clinicamente.`;
+  }
+  $('energyPhaseNote').textContent=phase;
+
+  updateRouteVisibility();
+  const route=$('nutritionRoute').value;
+  let enLow=0,enHigh=0,pnLow=0,pnHigh=0,totalLow=netLow,totalHigh=netHigh;
+  let routeName='',routeShort='',routeMsg='';
+  if(policy.blocked){
+    routeName='Rivalutare'; routeShort='nessuna prescrizione automatica';
+    routeMsg='Shock non controllato: il programma sospende la prescrizione energetica automatica. Non incrementare EN finché perfusione ed emodinamica non sono stabilizzate; la strategia EN/PN va definita clinicamente.';
+  }else if(route==='en'){
+    enLow=netLow; enHigh=netHigh;
+    routeName='EN'; routeShort='enterale esclusiva';
+    routeMsg='EN è la via preferita quando il tratto gastrointestinale è utilizzabile e la tolleranza è adeguata.';
+  }else if(route==='pn'){
+    pnLow=netLow; pnHigh=netHigh;
+    routeName='PN'; routeShort='parenterale esclusiva';
+    routeMsg='PN esclusiva: usarla quando orale/EN sono controindicate o non praticabili. ESPEN 2023 indica l’avvio entro 3–7 giorni; nei pazienti severamente malnutriti può essere considerata prima in modo progressivo.';
+  }else{
+    const en=n('enAvailableKcal');
+    enLow=enHigh=en;
+    pnLow=Math.max(0,netLow-en);
+    pnHigh=Math.max(0,netHigh-en);
+    totalLow=en+pnLow; totalHigh=en+pnHigh;
+    routeName='EN + PN'; routeShort='PN supplementare';
+    routeMsg=`Quota EN inserita: ${fmt(en,0)} kcal/d. La PN supplementare copre automaticamente il deficit rispetto al target del giorno, dopo avere sottratto le kcal non nutrizionali.`;
+    if(en>netHigh+1) routeMsg+=' La quota EN inserita supera già il limite superiore del target energetico calcolato: verificare il rischio di overfeeding.';
+  }
+  $('outENPrescription').textContent=policy.blocked?'—':rangeText(enLow,enHigh);
+  $('outPNPrescription').textContent=policy.blocked?'—':rangeText(pnLow,pnHigh);
+  $('outRouteTotal').textContent=policy.blocked?'—':rangeText(totalLow,totalHigh);
+  $('outRouteName').textContent=routeName;
+  $('outRouteShort').textContent=routeShort;
+  $('routeNote').textContent=routeMsg;
+  $('routeNote').className='note'+(policy.blocked?' danger':((route==='combo'&&n('enAvailableKcal')>netHigh+1)?' warn':''));
+
+  const protTarget=1.3*p.ref;
+  const prot=proteinDelivered();
+  $('outProteinTarget').textContent=fmt(protTarget,0)+' g/d';
+  $('outProteinIntake').textContent=fmt(prot.total,0)+' g/d';
+  $('outProteinSources').textContent=route==='en'?`EN ${fmt(prot.en,0)} g`:route==='pn'?`PN ${fmt(prot.pn,0)} g`:`EN ${fmt(prot.en,0)} + PN ${fmt(prot.pn,0)} g`;
+  $('outProteinCoverage').textContent=pct(protTarget?prot.total/protTarget:0);
+  const protDelta=prot.total-protTarget;
+  $('outProteinDeficit').textContent=(protDelta>=0?'eccedenza ':'deficit ')+fmt(Math.abs(protDelta),0)+' g/d';
+  $('outProteinN').textContent=fmt(prot.total/6.25,1)+' g N/d';
+  calcNitrogen();
+}
+function calcNitrogen(){
+  const p=patient(), mode=$('urineNMode').value, raw=n('urineNValue');
+  $('urineNLabel').textContent=mode==='urea'?'Urea urine':'UUN';
+  $('urineNUnit').textContent=mode==='urea'?'g/d':'g N/d';
+  const uun=mode==='urea'?raw*0.4665:raw;
+  const tbwMode=$('tbwMode').value;
+  const tbw=tbwMode==='manual'?n('tbwManual'):(tbwMode==='excel'?p.w*0.60:p.tbw);
+  const ny=(n('ureaYesterday')*0.4665)/100;
+  const nt=(n('ureaToday')*0.4665)/100;
+  const deltaPool=(nt-ny)*tbw;
+  const extra=n('extraNLoss');
+  const nloss=uun+deltaPool+3+extra;
+  const prot=proteinDelivered();
+  const nIntake=prot.total/6.25;
+  const nb=nIntake-nloss;
+
+  $('outUUN').textContent=fmt(uun,1);
+  $('outDeltaPool').textContent=(deltaPool>=0?'+':'')+fmt(deltaPool,1);
+  $('outNLoss').textContent=fmt(nloss,1);
+  $('outNIntake').textContent=fmt(nIntake,1);
+  $('outNBalance').textContent=(nb>=0?'+':'')+fmt(nb,1);
+  $('outProteinBalance').textContent=(nb>=0?'+':'')+fmt(nb*6.25,0);
+
+  let c,detail;
+  if(nloss<5){c='ASSENTE';detail='<5 g N/die';}
+  else if(nloss<10){c='LIEVE';detail='5–10 g N/die';}
+  else if(nloss<15){c='MODERATO';detail='10–15 g N/die';}
+  else{c='GRAVE';detail='>15 g N/die';}
+  $('outCatabolism').textContent=c;
+  $('outCatabolicClass').textContent=`${detail} · classificazione operativa del foglio`;
+
+  const crtt=n('citrateMmolH')>0;
+  let warn=`TBW usata ${fmt(tbw,1)} L; Δ pool N ${deltaPool>=0?'+':''}${fmt(deltaPool,1)} g/d; perdite non urinarie fisse 3 g N/d.`;
+  if(crtt && extra<=0) warn+=' È presente citrato da CRRT ma non sono state aggiunte perdite azotate extracorporee: il bilancio può sottostimare le perdite di N.';
+  else if(extra>0) warn+=` Perdite N aggiuntive inserite: ${fmt(extra,1)} g/d.`;
+  $('nitrogenWarning').textContent=warn;
+}
+function calcCalorimetry(){
+  const vo2=n('vo2'), vco2=n('vco2'), un=n('calUN');
+  const ee=1.44*(3.941*vo2+1.106*vco2)-(un>0?2.17*un:0);
+  const rq=vo2>0?vco2/vo2:NaN;
+  const vco2ee=vco2*8.19;
+  $('outWeir').textContent=fmt(ee,0); $('outRQ').textContent=fmt(rq,2); $('outVCO2EE').textContent=fmt(vco2ee,0); $('outEnergyCoverage').textContent=pct(ee?n('currentKcal')/ee:0);
+  let rqt=''; if(!Number.isFinite(rq)) rqt='dato non disponibile'; else if(rq<0.70) rqt='molto basso: digiuno/chetosi o artefatto'; else if(rq<0.85) rqt='prevalenza lipidica / mix'; else if(rq<=1.0) rqt='mix con maggiore quota glucidica'; else rqt='>1: overfeeding/lipogenesi o artefatto';
+  $('outRQText').textContent=rqt;
+  const day=patient().day; $('calPhaseTarget').textContent=day<=3?`Giorno ICU ${day}: riferimento operativo ≤70% dell'EE misurato (${fmt(ee*.7,0)} kcal/d).`:`Giorno ICU ${day}: riferimento operativo 80–100% dell'EE misurato (${fmt(ee*.8,0)}–${fmt(ee,0)} kcal/d).`;
+}
+function calcBiva(){
+  const p=patient(), rz=n('rz'),xc=n('xc'),rz0=n('rz0'),xc0=n('xc0');
+  const pha=Math.atan2(xc,rz)*180/Math.PI,z=Math.hypot(rz,xc),rh=rz/p.hm,xh=xc/p.hm;
+  const pha0=Math.atan2(xc0,rz0)*180/Math.PI,z0=Math.hypot(rz0,xc0),zh=z/p.hm,zh0=z0/p.hm;
+  $('outPha').textContent=fmt(pha,2)+'°';$('outZ').textContent=fmt(z,1);$('outRzH').textContent=fmt(rh,1);$('outXcH').textContent=fmt(xh,1);
+  const dz=zh0?((zh-zh0)/zh0*100):0, dpha=pha-pha0;
+  let msg=`Δ lunghezza vettore ${fmt(dz,1)}%; ΔPhA ${fmt(dpha,2)}°. `;
+  if(dz<-2) msg+='Il vettore si è accorciato: compatibile con maggiore idratazione relativa.'; else if(dz>2) msg+='Il vettore si è allungato: compatibile con minore idratazione relativa.'; else msg+='Lunghezza del vettore sostanzialmente stabile.';
+  $('bivaTrendText').textContent=msg; drawBiva(rz0/p.hm,xc0/p.hm,rh,xh);
+}
+function drawBiva(x0,y0,x1,y1){
+  const svg=$('bivaPlot'); const xs=[x0,x1].filter(Number.isFinite), ys=[y0,y1].filter(Number.isFinite); if(!xs.length||!ys.length){svg.innerHTML='';return}
+  const xmin=Math.max(0,Math.min(...xs)*.75), xmax=Math.max(...xs)*1.25, ymin=0, ymax=Math.max(...ys)*1.4;
+  const W=640,H=360,m={l:62,r:24,t:20,b:50}; const X=x=>m.l+(x-xmin)/(xmax-xmin||1)*(W-m.l-m.r); const Y=y=>H-m.b-(y-ymin)/(ymax-ymin||1)*(H-m.t-m.b);
+  let g=`<rect x="0" y="0" width="${W}" height="${H}" fill="#fbfdff" rx="12"/><line x1="${m.l}" y1="${H-m.b}" x2="${W-m.r}" y2="${H-m.b}" stroke="#9fb1c3"/><line x1="${m.l}" y1="${m.t}" x2="${m.l}" y2="${H-m.b}" stroke="#9fb1c3"/><text x="${W/2}" y="${H-12}" text-anchor="middle" fill="#63768b" font-size="13">Rz/H (Ω/m)</text><text x="18" y="${H/2}" transform="rotate(-90 18 ${H/2})" text-anchor="middle" fill="#63768b" font-size="13">Xc/H (Ω/m)</text>`;
+  for(let i=0;i<=4;i++){const xv=xmin+(xmax-xmin)*i/4,yv=ymin+(ymax-ymin)*i/4;g+=`<line x1="${X(xv)}" y1="${m.t}" x2="${X(xv)}" y2="${H-m.b}" stroke="#eef2f6"/><text x="${X(xv)}" y="${H-m.b+18}" text-anchor="middle" fill="#7c8998" font-size="10">${fmt(xv,0)}</text><line x1="${m.l}" y1="${Y(yv)}" x2="${W-m.r}" y2="${Y(yv)}" stroke="#eef2f6"/><text x="${m.l-8}" y="${Y(yv)+3}" text-anchor="end" fill="#7c8998" font-size="10">${fmt(yv,0)}</text>`}
+  g+=`<line x1="${X(x0)}" y1="${Y(y0)}" x2="${X(x1)}" y2="${Y(y1)}" stroke="#8aa3b7" stroke-width="2" stroke-dasharray="6 5"/><circle cx="${X(x0)}" cy="${Y(y0)}" r="7" fill="#0a5c91"/><circle cx="${X(x1)}" cy="${Y(y1)}" r="7" fill="#0d7b78"/><text x="${X(x0)+10}" y="${Y(y0)-8}" fill="#0a5c91" font-size="12" font-weight="700">T0</text><text x="${X(x1)+10}" y="${Y(y1)-8}" fill="#0d7b78" font-size="12" font-weight="700">oggi</text>`;svg.innerHTML=g;
+}
+function dpercent(cur,base){return base?((cur-base)/base*100):NaN}
+function calcUS(){
+  const q=n('rfT')+n('viT'),q0=n('rfT0')+n('viT0'),dq=dpercent(q,q0),dc=dpercent(n('rfCSA'),n('rfCSA0')),dg=dpercent(n('gray'),n('gray0'));
+  $('outQMLT').textContent=fmt(q,1)+' mm';$('outQMLTDelta').textContent=(dq>=0?'+':'')+fmt(dq,1)+'%';$('outCSADelta').textContent=(dc>=0?'+':'')+fmt(dc,1)+'%';$('outGrayDelta').textContent=(dg>=0?'+':'')+fmt(dg,1)+'%';
+}
+function balanceRows(){
+  let vin=0,vout=0,nkin=0,nkout=0;
+  document.querySelectorAll('#balanceTable tbody tr').forEach(row=>{
+    const vol=parseFloat(row.querySelector('.bal-vol').value)||0, na=parseFloat(row.querySelector('.bal-na').value)||0,k=parseFloat(row.querySelector('.bal-k').value)||0,eq=vol*(na+k);
+    row.querySelector('.bal-eq').textContent=fmt(eq,0);
+    if(row.dataset.flow==='in'){vin+=vol;nkin+=eq}else{vout+=vol;nkout+=eq}
+  });
+  nkin+=n('directInNK');nkout+=n('directOutNK');
+  return {vin,vout,nkin,nkout};
+}
+function calcSodium(){
+  const p=patient(),na=n('pNa'),gl=n('glucose'),bun=n('bun'),uosm=n('uOsm');
+  const osm=2*na+gl/18+bun/2.8,ton=2*na+gl/18, cls=na<135?'Iponatriemia':na>145?'Ipernatriemia':'Normonatriemia';
+  $('outNaClass').textContent=cls;$('outNaContext').textContent=`${$('volumeStatus').value}; ${$('naDuration').selectedOptions[0].text}; sintomi ${$('naSymptoms').selectedOptions[0].text}`;$('outOsm').textContent=fmt(osm,0);$('outTonicity').textContent=fmt(ton,0);$('outUosm').textContent=fmt(uosm,0);
+  $('outUosmText').textContent=uosm<100?'urina molto diluita':uosm<300?'diluita/intermedia':'concentrata';
+  const b=balanceRows(),ins=n('insensible'),dV=b.vin-b.vout-ins,dNK=b.nkin-b.nkout,iso=na?dNK/na:0,efwb=dV-iso;
+  const uNa=n('uNa'),uK=n('uK'),uv=n('urineVolBalance'),ratio=na?(uNa+uK)/na:0,efwc=uv*(1-ratio);
+  const tbw=$('naTBWMode').value==='manual'?n('naTBWManual'):p.tbw;
+  const na0=n('pNa0')||na,pred=(tbw+dV)>0?((na0*tbw+dNK)/(tbw+dV)):NaN,obs=parseFloat($('pNaObserved').value),resid=Number.isFinite(obs)?obs-pred:NaN;
+  $('outWaterBal').textContent=(dV>=0?'+':'')+fmt(dV,2)+' L';$('outNKBal').textContent=(dNK>=0?'+':'')+fmt(dNK,0);$('outIsoEq').textContent=(iso>=0?'+':'')+fmt(iso,2)+' L';$('outEFWB').textContent=(efwb>=0?'+':'')+fmt(efwb,2)+' L';$('outUrineRatio').textContent=fmt(ratio,2);$('outEFWC').textContent=(efwc>=0?'+':'')+fmt(efwc,2);$('outPredNa').textContent=fmt(pred,1);$('outNaResidual').textContent=Number.isFinite(resid)?((resid>=0?'+':'')+fmt(resid,1)):'–';
+  let dir=efwb>0.2?'Bilancio positivo di acqua libera elettrolitica: tendenza ad abbassare la natriemia.':efwb<-0.2?'Bilancio negativo di acqua libera elettrolitica: tendenza ad aumentare la natriemia.':'Bilancio di acqua libera elettrolitica vicino allo zero.';
+  dir+=efwc>0.15?' Il rene sta eliminando acqua libera elettrolitica (CH₂Oe positivo), con tendenza ad aumentare il Na.':efwc<-0.15?' Il rene sta trattenendo acqua libera / eliminando urine relativamente ricche di elettroliti (CH₂Oe negativo), con tendenza ad abbassare il Na.':'';
+  $('naDirection').textContent=dir;
+  const deltaAD=(tbw+1)>0?((n('infNa')+n('infK')-na)/(tbw+1))*n('infVol'):NaN;$('outAdrogue').textContent=(deltaAD>=0?'+':'')+fmt(deltaAD,2)+' mmol/L';
+  let html='';
+  if(cls==='Iponatriemia'){
+    html+=`<div class="note ${ton<275?'':'warn'}"><b>Iponatriemia ${ton<275?'ipotona':'non chiaramente ipotona'}.</b> Tonicità calcolata ${fmt(ton,0)} mOsm/kg.`;
+    if(uosm<100)html+=' Uosm <100: soppressione appropriata di ADH / eccesso relativo di acqua.'; else html+=' Uosm ≥100: ADH attiva o incapacità di diluire; integrare con volemia e Na urinario.'; html+='</div>';
+  }else if(cls==='Ipernatriemia'){
+    html+=`<div class="note warn"><b>Ipernatriemia.</b> Valutare primariamente bilancio di acqua libera, diuresi, Uosm e perdite extrarenali. CH₂Oe e EFWB aiutano a separare il contributo renale da quello globale.</div>`;
+  }else html+=`<div class="note"><b>Natriemia nel range usuale.</b> Il bilancio Na/K/H₂O può comunque spiegare la direzione attesa nelle prossime ore.</div>`;
+  if($('naSymptoms').value==='severe')html+=`<div class="note danger" style="margin-top:8px"><b>Sintomi neurologici gravi:</b> la gestione dipende dalla rapidità di insorgenza e richiede un target di correzione clinicamente definito, non derivabile dal solo bilancio.</div>`;
+  html+=`<div class="note" style="margin-top:8px"><b>Stima Na finale:</b> ${fmt(pred,1)} mmol/L. È una mass-balance semplificata, utile per controllo di coerenza, non una previsione affidabile al singolo mmol/L.</div>`;
+  $('sodiumInterpretation').innerHTML=html;
+}
+function recalc(){calcNutrition();calcCalorimetry();calcBiva();calcUS();calcSodium();saveState()}
+
+document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active')); $('page-'+b.dataset.page).classList.add('active');
+}));
+document.addEventListener('input',e=>{if(e.target.matches('input,select'))recalc()});
+document.addEventListener('change',e=>{recalc()});
+loadState();recalc();
+</script>
+</body>
+</html>
