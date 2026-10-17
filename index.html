@@ -86,7 +86,7 @@ th{color:#4e5f75;background:#f6f8fb;font-weight:800}
 td input{min-width:88px;padding:7px 8px}
 .pill{display:inline-flex;align-items:center;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800;background:#e9f2f8;color:#285a7d}
 .pill.red{background:#fce8e8;color:#923838}.pill.amber{background:#fff0c8;color:#865900}.pill.green{background:#e7f6ee;color:#286947}
-.rule{display:grid;grid-template-columns:80px 1fr;gap:8px;padding:8px 0;border-bottom:1px solid var(--line)}
+.rule{display:grid;grid-template-columns:minmax(150px,190px) 1fr;gap:14px;padding:8px 0;border-bottom:1px solid var(--line);align-items:start}.rule b{overflow-wrap:anywhere;line-height:1.25}
 .rule:last-child{border-bottom:none}
 .rule b{color:var(--blue)}
 .svgbox{background:#fbfdff;border:1px solid var(--line);border-radius:12px;padding:8px}
@@ -100,7 +100,7 @@ svg{max-width:100%;height:auto;display:block}
 .range input[type=range]{padding:0;border:none;box-shadow:none}
 .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 @media(max-width:1050px){.patient-grid{grid-template-columns:repeat(3,1fr)}.span-8,.span-7,.span-6,.span-5,.span-4,.span-3{grid-column:span 12}.metric-grid{grid-template-columns:repeat(2,1fr)}.formgrid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:620px){.app{padding:10px}.hero{padding:18px}.patient-grid,.formgrid,.formgrid.three,.formgrid.two,.metric-grid{grid-template-columns:1fr}.card{padding:13px}.metric strong{font-size:23px}.nav{top:0}.unit{top:34px}}
+@media(max-width:620px){.app{padding:10px}.hero{padding:18px}.patient-grid,.formgrid,.formgrid.three,.formgrid.two,.metric-grid{grid-template-columns:1fr}.card{padding:13px}.metric strong{font-size:23px}.nav{top:0}.unit{top:34px}.rule{grid-template-columns:1fr;gap:4px}.rule b{margin-bottom:2px}}
 @media print{body{background:#fff}.hero,.nav,.actions{display:none}.patient,.card{box-shadow:none}.page{display:block!important;page-break-before:always}.page:first-of-type{page-break-before:auto}.app{max-width:none}.output{background:#fff!important;color:#000!important;border:1px solid #bbb}.output *{color:#000!important}}
 </style>
 </head>
@@ -125,6 +125,7 @@ svg{max-width:100%;height:auto;display:block}
     <button data-page="calorimetry">Calorimetria</button>
     <button data-page="biva">BIVA</button>
     <button data-page="ultrasound">Eco quadricipite</button>
+    <button data-page="integrated">Sintesi integrata</button>
     <button data-page="sodium">Sodio</button>
     <button data-page="refs">Riferimenti</button>
   </nav>
@@ -353,36 +354,82 @@ svg{max-width:100%;height:auto;display:block}
     <section class="page" id="page-biva">
       <div class="grid">
         <div class="card span-6">
-          <div class="kicker">BIVA · dati grezzi</div>
+          <div class="kicker">BIVA · dati bioelettrici grezzi</div>
           <h2>Rz, Xc, PhA e vettore normalizzato per altezza</h2>
           <div class="formgrid two">
             <div class="unitwrap"><label>Rz attuale</label><input id="rz" data-save type="number" min="1" step="0.1" value="500"><span class="unit">Ω</span></div>
             <div class="unitwrap"><label>Xc attuale</label><input id="xc" data-save type="number" min="0" step="0.1" value="45"><span class="unit">Ω</span></div>
-            <div class="unitwrap"><label>Rz precedente</label><input id="rz0" data-save type="number" min="1" step="0.1" value="520"><span class="unit">Ω</span></div>
-            <div class="unitwrap"><label>Xc precedente</label><input id="xc0" data-save type="number" min="0" step="0.1" value="46"><span class="unit">Ω</span></div>
+            <div class="unitwrap"><label>Rz T0 / precedente</label><input id="rz0" data-save type="number" min="1" step="0.1" value="520"><span class="unit">Ω</span></div>
+            <div class="unitwrap"><label>Xc T0 / precedente</label><input id="xc0" data-save type="number" min="0" step="0.1" value="46"><span class="unit">Ω</span></div>
           </div>
-          <div class="note" style="margin-top:12px">In ICU, quando i fluidi cambiano rapidamente, le stime convenzionali di FFM/lean mass vanno interpretate con prudenza. Il trend di Rz, Xc, PhA e del vettore BIVA è spesso più informativo del singolo valore stimato.</div>
+          <div class="note" style="margin-top:12px">Il dispositivo misura direttamente Rz e Xc; PhA, Z e vettore R-Xc sono derivati. In ICU il trend dei dati grezzi/BIVA è particolarmente utile per l'idratazione, mentre le stime di massa possono essere confondibili dai fluid shifts.</div>
         </div>
         <div class="card output span-6">
           <div class="metric-grid" style="grid-template-columns:repeat(2,1fr)">
-            <div class="metric"><div class="k">PhA</div><strong id="outPha">–</strong><div class="sub">gradi</div></div>
+            <div class="metric"><div class="k">PhA</div><strong id="outPha">–</strong><div class="sub" id="outPhaFlag">gradi</div></div>
             <div class="metric"><div class="k">Z</div><strong id="outZ">–</strong><div class="sub">Ω</div></div>
             <div class="metric"><div class="k">Rz/H</div><strong id="outRzH">–</strong><div class="sub">Ω/m</div></div>
             <div class="metric"><div class="k">Xc/H</div><strong id="outXcH">–</strong><div class="sub">Ω/m</div></div>
           </div>
           <div id="bivaTrendText" class="note" style="margin-top:12px;background:rgba(255,255,255,.1);border-left-color:#fff;color:#fff"></div>
         </div>
+
+        <div class="card span-12">
+          <div class="kicker">Bodygram / Akern · dati opzionali</div>
+          <h2>Fluidi, masse e indici riportati dal software</h2>
+          <div class="note">La disponibilità varia con modello, versione e configurazione (Bodygram Dashboard/HBO/legacy). <b>Non ricostruiamo gli algoritmi proprietari</b>: inserire i valori esattamente come riportati dal sistema. Lasciare vuoto ciò che non è disponibile.</div>
+          <div class="table-wrap" style="margin-top:12px">
+            <table>
+              <thead><tr><th>Parametro</th><th>Attuale</th><th>T0 / precedente</th><th>Unità / significato</th></tr></thead>
+              <tbody>
+                <tr><td>TBW</td><td><input id="biaTBW" data-save type="number" step="0.1" placeholder=""></td><td><input id="biaTBW0" data-save type="number" step="0.1" placeholder=""></td><td>L · acqua corporea totale</td></tr>
+                <tr><td>ECW</td><td><input id="biaECW" data-save type="number" step="0.1"></td><td><input id="biaECW0" data-save type="number" step="0.1"></td><td>L · acqua extracellulare</td></tr>
+                <tr><td>ICW</td><td><input id="biaICW" data-save type="number" step="0.1"></td><td><input id="biaICW0" data-save type="number" step="0.1"></td><td>L · acqua intracellulare</td></tr>
+                <tr><td>FFM</td><td><input id="biaFFM" data-save type="number" step="0.1"></td><td><input id="biaFFM0" data-save type="number" step="0.1"></td><td>kg · fat-free mass</td></tr>
+                <tr><td>FM</td><td><input id="biaFM" data-save type="number" step="0.1"></td><td><input id="biaFM0" data-save type="number" step="0.1"></td><td>kg · fat mass</td></tr>
+                <tr><td>BCM</td><td><input id="biaBCM" data-save type="number" step="0.1"></td><td><input id="biaBCM0" data-save type="number" step="0.1"></td><td>kg · body cell mass</td></tr>
+                <tr><td>MM / SMM</td><td><input id="biaMM" data-save type="number" step="0.1"></td><td><input id="biaMM0" data-save type="number" step="0.1"></td><td>kg · muscle / skeletal muscle mass</td></tr>
+                <tr><td>ASMM</td><td><input id="biaASMM" data-save type="number" step="0.1"></td><td><input id="biaASMM0" data-save type="number" step="0.1"></td><td>kg · appendicular skeletal muscle mass</td></tr>
+                <tr><td>BCMI</td><td><input id="biaBCMI" data-save type="number" step="0.1"></td><td><input id="biaBCMI0" data-save type="number" step="0.1"></td><td>kg/m² · body cell mass index</td></tr>
+                <tr><td>FFMI</td><td><input id="biaFFMI" data-save type="number" step="0.1"></td><td><input id="biaFFMI0" data-save type="number" step="0.1"></td><td>kg/m² · fat-free mass index</td></tr>
+                <tr><td>FMI</td><td><input id="biaFMI" data-save type="number" step="0.1"></td><td><input id="biaFMI0" data-save type="number" step="0.1"></td><td>kg/m² · fat mass index</td></tr>
+                <tr><td>SMMI</td><td><input id="biaSMMI" data-save type="number" step="0.1"></td><td><input id="biaSMMI0" data-save type="number" step="0.1"></td><td>kg/m² · skeletal muscle mass index</td></tr>
+                <tr><td>ASMMI</td><td><input id="biaASMMI" data-save type="number" step="0.1"></td><td><input id="biaASMMI0" data-save type="number" step="0.1"></td><td>kg/m² · appendicular skeletal muscle mass index</td></tr>
+                <tr><td>BMR</td><td><input id="biaBMR" data-save type="number" step="1"></td><td><input id="biaBMR0" data-save type="number" step="1"></td><td>kcal/d · stima BIA, non sostituisce calorimetria</td></tr>
+                <tr><td>Na<sub>e</sub>/K<sub>e</sub></td><td><input id="biaNAK" data-save type="number" step="0.01"></td><td><input id="biaNAK0" data-save type="number" step="0.01"></td><td>rapporto riportato da alcune versioni Bodygram</td></tr>
+                <tr><td>PhA percentile</td><td><input id="biaPhaPct" data-save type="number" min="0" max="100" step="1"></td><td><input id="biaPhaPct0" data-save type="number" min="0" max="100" step="1"></td><td>percentile rispetto alla popolazione di riferimento</td></tr>
+                <tr><td>SPhA / z-score PhA</td><td><input id="biaSPhA" data-save type="number" step="0.01"></td><td><input id="biaSPhA0" data-save type="number" step="0.01"></td><td>se riportato dal software/reference</td></tr>
+                <tr><td>Hand Grip Strength</td><td><input id="biaHGS" data-save type="number" step="0.1"></td><td><input id="biaHGS0" data-save type="number" step="0.1"></td><td>kg · se disponibile nel modulo sarcopenia</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="formgrid three" style="margin-top:12px">
+            <div><label>HYDRAGRAM® (se disponibile)</label><select id="biaHydragram" data-save><option value="">non inserito</option><option value="dehydrated">disidratazione</option><option value="normal">normoidratazione</option><option value="overhydrated">iperidratazione</option></select></div>
+            <div class="unitwrap"><label>OH · Overhydration</label><input id="biaOH" data-save type="number" step="0.1"><span class="unit">L</span></div>
+            <div><label>NUTRIGRAM® / classe riportata</label><input id="biaNutrigram" data-save placeholder="es. rischio / percentile / classe"></div>
+            <div><label>Indice rischio malnutrizione</label><input id="biaMalnutritionRisk" data-save placeholder="valore/classe dal report"></div>
+            <div><label>Algoritmo sarcopenia</label><input id="biaSarcopenia" data-save placeholder="es. normale / rischio / sarcopenia / dinapenia"></div>
+            <div><label>Indice rischio malattia</label><input id="biaDiseaseRisk" data-save placeholder="valore/classe dal report"></div>
+          </div>
+        </div>
+
         <div class="card span-7">
           <h3>Vettore corrente vs precedente</h3>
           <div class="svgbox"><svg id="bivaPlot" viewBox="0 0 640 360" role="img" aria-label="Grafico BIVA semplificato"></svg></div>
-          <div class="legend"><span><i class="dot d1"></i>precedente</span><span><i class="dot d2"></i>attuale</span><span>Grafico descrittivo, senza ellissi di riferimento.</span></div>
+          <div class="legend"><span><i class="dot d1"></i>precedente</span><span><i class="dot d2"></i>attuale</span><span>Grafico descrittivo: senza ellissi proprietarie non classifica da solo l'idratazione assoluta.</span></div>
         </div>
         <div class="card span-5">
+          <h3>Interpretazione automatica</h3>
+          <div id="bivaInterpretation"></div>
+        </div>
+
+        <div class="card span-12">
           <h3>Come leggere i parametri</h3>
-          <div class="rule"><b>Rz</b><div>Componente resistiva, fortemente influenzata dall'acqua corporea conduttiva.</div></div>
-          <div class="rule"><b>Xc</b><div>Componente reattiva, legata alle proprietà capacitive delle membrane e dei tessuti.</div></div>
-          <div class="rule"><b>PhA</b><div>arctan(Xc/Rz). Va confrontato con popolazione, dispositivo e trend; non usare un cut-off universale.</div></div>
-          <div class="rule"><b>Z/H</b><div>La lunghezza del vettore cambia con lo stato di idratazione. Un accorciamento seriale è compatibile con maggiore idratazione, un allungamento con il contrario.</div></div>
+          <div class="rule"><b>Rz / vettore</b><div>L'accorciamento seriale del vettore è compatibile con aumento relativo dell'idratazione; l'allungamento con riduzione dell'idratazione. La classificazione assoluta richiede ellissi/reference appropriate.</div></div>
+          <div class="rule"><b>Xc / PhA</b><div>Riflettono proprietà capacitive/integrità dei tessuti e sono influenzati anche da stato nutrizionale, infiammazione e fluidi. Nel materiale didattico del corso PhA &lt;4,6° è un valore di attenzione, non una soglia diagnostica universale.</div></div>
+          <div class="rule"><b>TBW/ECW/ICW</b><div>Descrivono i compartimenti idrici stimati. In ICU privilegiare andamento seriale e coerenza con BIVA/Hydragram rispetto a un singolo numero.</div></div>
+          <div class="rule"><b>FFM/BCM/MM/SMM</b><div>Sono stime di composizione corporea. Edema e fluid shifts possono simulare variazioni di massa: se BIVA indica sovraccarico, la perdita muscolare va verificata con ecografia e funzione.</div></div>
+          <div class="rule"><b>ASMMI/SMMI/FFMI</b><div>Utili quando disponibili e confrontati con le reference specifiche del software/popolazione; non applichiamo cut-off generici nel calcolatore.</div></div>
         </div>
       </div>
     </section>
@@ -411,20 +458,79 @@ svg{max-width:100%;height:auto;display:block}
             <div><label>Grayscale T0</label><input id="gray0" data-save type="number" min="0" max="255" step="1" value="60"></div>
           </div>
         </div>
+
+        <div class="card span-12">
+          <div class="kicker">Funzione · ICU-acquired weakness</div>
+          <h2>MRC Sum Score + architettura muscolare</h2>
+          <div class="formgrid three">
+            <div><label>Paziente valutabile con test volontario?</label><select id="mrcAssessable" data-save><option value="yes">Sì</option><option value="no">No · sedazione/delirium/non cooperante</option></select></div>
+            <div><label>MRC Sum Score (0–60)</label><input id="mrcSS" data-save type="number" min="0" max="60" step="1" value="52"></div>
+            <div><label>Timing ecografia</label><select id="usTiming" data-save><option value="t0">T0 · entro 24–48 h</option><option value="d3">Giorno 3</option><option value="d7">Giorno 7</option><option value="late">&gt;7 giorni</option><option value="recovery">recupero / post-ICU</option></select></div>
+          </div>
+          <div id="icuawInterpretation" class="note" style="margin-top:12px"></div>
+        </div>
+
         <div class="card output span-12">
           <div class="metric-grid">
             <div class="metric"><div class="k">QMLT attuale</div><strong id="outQMLT">–</strong><div class="sub">RF + VI</div></div>
             <div class="metric"><div class="k">Δ QMLT</div><strong id="outQMLTDelta">–</strong><div class="sub">vs T0</div></div>
             <div class="metric"><div class="k">Δ RF CSA</div><strong id="outCSADelta">–</strong><div class="sub">vs T0</div></div>
+            <div class="metric"><div class="k">Δ pennation</div><strong id="outPennDelta">–</strong><div class="sub">vs T0</div></div>
+          </div>
+          <div class="metric-grid" style="margin-top:9px">
             <div class="metric"><div class="k">Δ grayscale</div><strong id="outGrayDelta">–</strong><div class="sub">vs T0</div></div>
+            <div class="metric"><div class="k">MRC-SS</div><strong id="outMRC">–</strong><div class="sub" id="outMRCText">–</div></div>
+            <div class="metric"><div class="k">Segnale US ICUAW</div><strong id="outUSICUAW">–</strong><div class="sub">architettura / trend</div></div>
+            <div class="metric"><div class="k">AUC Δ pennation</div><strong>0,82</strong><div class="sub">T7–T1 · studio Formenti 2022</div></div>
           </div>
         </div>
         <div class="card span-12">
           <div class="rule"><b>QMLT</b><div>Quadriceps Muscle Layer Thickness = spessore del rectus femoris + spessore del vastus intermedius.</div></div>
           <div class="rule"><b>RF CSA</b><div>Area di sezione trasversa del rectus femoris. Utile soprattutto come misura seriale se landmark e compressione della sonda sono riproducibili.</div></div>
-          <div class="rule"><b>Pennation</b><div>Nel materiale didattico fornito, valori sani sono riportati circa 10–15°; in ICU il trend è più utile di un cut-off isolato.</div></div>
+          <div class="rule"><b>Pennation + MRC</b><div>MRC-SS &lt;48 è il riferimento clinico comunemente usato per ICUAW nel paziente cooperante. Nel vostro studio, la <b>variazione percentuale</b> del pennation angle RF tra T1 e T7 — più del valore assoluto iniziale — è risultata il miglior predittore ecografico di ICUAW (OR 0,91 per punto %, AUC 0,82). Nei pazienti che sviluppavano ICUAW la variazione mediana era −36,6% vs −14,7% negli altri. Il lavoro non definisce un singolo cut-off validato per il paziente individuale.</div></div>
           <div class="rule"><b>Grayscale</b><div>Un aumento dell'ecogenicità può accompagnare edema, infiltrazione/fibrosi e alterazioni qualitative del muscolo; non è una misura specifica di una singola componente.</div></div>
-          <div class="note warn" style="margin-top:10px">La ripetibilità dipende dal protocollo: stesso lato, landmark, posizione, pressione della sonda, gain e profondità.</div>
+          <div class="note warn" style="margin-top:10px">L'ecografia può anticipare il sospetto di ICUAW quando l'MRC non è ancora eseguibile, ma non sostituisce automaticamente la valutazione clinica/eletrofisiologica. La ripetibilità dipende da stesso lato, landmark, posizione, pressione della sonda, gain e profondità.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-integrated">
+      <div class="grid">
+        <div class="card span-12">
+          <div class="kicker">Sintesi multimodale</div>
+          <h2>Calorimetria + BIA/BIVA + ecografia muscolare</h2>
+          <div class="formgrid three">
+            <div><label>Timing della valutazione integrata</label><select id="integratedTiming" data-save><option value="auto">automatico dal giorno ICU</option><option value="t0">T0 · 0–48 h</option><option value="d3">Giorno 3</option><option value="d7">Giorno 7</option><option value="late">&gt;7 giorni</option><option value="recovery">recupero / post-ICU</option></select></div>
+            <div><label>Obiettivo clinico</label><select id="integratedGoal" data-save><option value="monitor">monitoraggio globale</option><option value="fluids">fluidi / de-resuscitation</option><option value="nutrition">adeguatezza nutrizionale</option><option value="muscle">perdita muscolare / ICUAW</option><option value="recovery">recupero funzionale</option></select></div>
+            <div><label>Nota clinica libera</label><input id="integratedNote" data-save placeholder="es. sepsi, CRRT, svezzamento, mobilizzazione"></div>
+          </div>
+          <div class="note" style="margin-top:12px"><b>Principio:</b> le tre tecniche rispondono a domande diverse. Calorimetria = dispendio/substrati; BIVA = soprattutto idratazione e stato bioelettrico; ecografia = massa/architettura muscolare. La discordanza tra tecniche può essere clinicamente informativa, non un errore.</div>
+        </div>
+
+        <div class="card output span-12">
+          <div class="metric-grid">
+            <div class="metric"><div class="k">Timing</div><strong id="outIntTiming">–</strong><div class="sub">fase interpretativa</div></div>
+            <div class="metric"><div class="k">Metabolismo</div><strong id="outIntMetabolic">–</strong><div class="sub">REE · RQ · coverage</div></div>
+            <div class="metric"><div class="k">Idratazione / BIVA</div><strong id="outIntHydration">–</strong><div class="sub">vettore · fluidi · PhA</div></div>
+            <div class="metric"><div class="k">Muscolo / funzione</div><strong id="outIntMuscle">–</strong><div class="sub">US · MRC</div></div>
+          </div>
+        </div>
+
+        <div class="card span-8">
+          <h3>Interpretazione integrata</h3>
+          <div id="integratedInterpretation"></div>
+        </div>
+        <div class="card span-4">
+          <h3>Cosa pesa di più in questo timing</h3>
+          <div id="integratedTimingGuide"></div>
+        </div>
+
+        <div class="card span-12">
+          <h3>Pattern clinici utili</h3>
+          <div class="rule"><b>Fluidi ↑ + US muscolo ↓</b><div>Un aumento/accorciamento del compartimento idrico può mascherare la perdita di tessuto e rendere FFM/MM apparentemente stabili o aumentate. In questo pattern l'ecografia pesa di più per il muscolo.</div></div>
+          <div class="rule"><b>REE misurata + RQ</b><div>La calorimetria definisce il fabbisogno energetico misurato; RQ aiuta a leggere utilizzo dei substrati e possibili segnali di sotto/overfeeding, sempre con controllo della qualità della misura.</div></div>
+          <div class="rule"><b>PhA ↓ + PA ↓</b><div>Due segnali diversi ma concordanti di deterioramento bioelettrico/architetturale; non sono intercambiabili. Nel vostro studio BIVA e US non correlavano direttamente, quindi devono essere letti come domini complementari.</div></div>
+          <div class="rule"><b>MRC &lt;48</b><div>Nel paziente cooperante supporta la diagnosi clinica di ICUAW dopo esclusione di altre cause; il trend del pennation angle può avere anticipato il deterioramento prima che l'MRC fosse eseguibile.</div></div>
         </div>
       </div>
     </section>
@@ -522,7 +628,10 @@ svg{max-width:100%;height:auto;display:block}
           <div class="ref"><b>Guideline caricata nel progetto</b><br>Il PDF fornito è la guideline completa pubblicata nel 2019. È stato usato come background, ma le regole operative del calcolatore sono state riallineate alla revisione pratica ESPEN 2023.</div>
           <div class="ref"><b>Refeeding · ESPEN 2023</b><br>Raccomandazioni 57–59: P, K e Mg almeno una volta/die nella prima settimana; in caso di refeeding hypophosphatemia (P &lt;0,65 mmol/L o calo &gt;0,16 mmol/L), controllo 2–3 volte/die e supplementazione se necessaria; restrizione dell'apporto energetico per 48 ore, quindi incremento graduale.</div>
           <div class="ref"><b>Calorie non nutrizionali in CRRT</b><br>Il citrato metabolizzato fornisce circa 0,59 kcal/mmol; il guadagno effettivo dipende da dose e rimozione extracorporea. Rogers AR, Jenkins B. <i>Calorie provision from citrate anticoagulation in continuous renal replacement therapy in critical care.</i> J Intensive Care Soc. 2021;22:279–284.</div>
-          <div class="ref"><b>BIVA</b><br>Materiale didattico “Bioimpedenziometria in terapia intensiva”, Talluri / Formenti, 2026: parametri grezzi, phase angle, vector analysis, limiti delle equazioni di composizione corporea in presenza di fluid shifts.</div>
+          <div class="ref"><b>BIA/BIVA · materiale del corso</b><br>Materiale didattico “Bioimpedenziometria in terapia intensiva”, Talluri / Formenti, 2026: Rz, Xc, PhA, BIVA, TBW/ECW/ICW, FFM/FM, BCM, massa muscolare, indici e limiti delle stime in presenza di fluid shifts.</div>
+          <div class="ref"><b>Akern BODYGRAM® HBO / Dashboard</b><br>Le versioni/configurazioni correnti possono includere Biavector®, HYDRAGRAM®, OH, TBW/ECW/ICW, PhA percentile, ASMM/ASMMI, SMM/SMMI, FFMI e moduli nutrizionali. I valori proprietari sono importati/inseriti, non ricalcolati dal toolkit.</div>
+          <div class="ref"><b>BIVA + ecografia in ICU</b><br>Formenti P, Coppola S, Umbrello M, et al. <i>Time course of the Bioelectrical Impedance Vector Analysis and muscular ultrasound in critically ill patients.</i> J Crit Care. 2022;68:89–95. Nella prima settimana PhA −21%, Xc −27%, Rz −11%; BIVA utile soprattutto per idratazione, senza correlazione diretta con RFCSA/US.</div>
+          <div class="ref"><b>Pennation angle e ICUAW</b><br>Formenti P, De Giorgis V, Coppola S, et al. <i>The possible predictive value of muscle ultrasound in the diagnosis of ICUAW in long-term critically ill patients.</i> J Crit Care. 2022;71:154104. Δ pennation RF T7–T1: AUC 0,82; OR 0,91 (95% CI 0,87–0,96); MRC-SS &lt;48 come riferimento clinico.</div>
           <div class="ref"><b>Ecografia muscolare</b><br>Materiale didattico “Ecografia muscolare · muscolo periferico in terapia intensiva”, Formenti: RF CSA, RF e VI thickness, QMLT, pennation angle, grayscale.</div>
           <div class="ref"><b>Calorimetria</b><br>Weir JB. New methods for calculating metabolic rate with special reference to protein metabolism. J Physiol. 1949. La stima VCO₂-only (VCO₂ × 8,19) è riportata anche nella linea guida ESPEN.</div>
           <div class="ref"><b>Sodio</b><br>Modulo ricostruito dalla versione del progetto EGA: bilancio H₂O/Na/K, equivalente isotono, electrolyte-free water balance, CH₂Oe e simulatore Adrogué–Madias come stima orientativa.</div>
@@ -535,6 +644,7 @@ svg{max-width:100%;height:auto;display:block}
 <script>
 const $=id=>document.getElementById(id);
 const n=id=>{const v=parseFloat($(id)?.value);return Number.isFinite(v)?v:0};
+const val=id=>{const el=$(id);if(!el||String(el.value).trim()==='')return NaN;const v=parseFloat(el.value);return Number.isFinite(v)?v:NaN};
 const fmt=(x,d=1)=>Number.isFinite(x)?x.toLocaleString('it-IT',{minimumFractionDigits:d,maximumFractionDigits:d}):'–';
 const pct=x=>Number.isFinite(x)?fmt(x*100,0)+'%':'–';
 
@@ -822,10 +932,48 @@ function calcBiva(){
   const pha=Math.atan2(xc,rz)*180/Math.PI,z=Math.hypot(rz,xc),rh=rz/p.hm,xh=xc/p.hm;
   const pha0=Math.atan2(xc0,rz0)*180/Math.PI,z0=Math.hypot(rz0,xc0),zh=z/p.hm,zh0=z0/p.hm;
   $('outPha').textContent=fmt(pha,2)+'°';$('outZ').textContent=fmt(z,1);$('outRzH').textContent=fmt(rh,1);$('outXcH').textContent=fmt(xh,1);
+  $('outPhaFlag').textContent=pha<4.6?'attenzione <4,6° (corso; non cut-off universale)':'gradi';
   const dz=zh0?((zh-zh0)/zh0*100):0, dpha=pha-pha0;
   let msg=`Δ lunghezza vettore ${fmt(dz,1)}%; ΔPhA ${fmt(dpha,2)}°. `;
   if(dz<-2) msg+='Il vettore si è accorciato: compatibile con maggiore idratazione relativa.'; else if(dz>2) msg+='Il vettore si è allungato: compatibile con minore idratazione relativa.'; else msg+='Lunghezza del vettore sostanzialmente stabile.';
   $('bivaTrendText').textContent=msg; drawBiva(rz0/p.hm,xc0/p.hm,rh,xh);
+
+  const tbw=val('biaTBW'),ecw=val('biaECW'),icw=val('biaICW'), tbw0=val('biaTBW0'),ecw0=val('biaECW0');
+  const ffm=val('biaFFM'),ffm0=val('biaFFM0'),bcm=val('biaBCM'),bcm0=val('biaBCM0'),mm=val('biaMM'),mm0=val('biaMM0');
+  const phaPct=val('biaPhaPct'),oh=val('biaOH'),hyd=$('biaHydragram').value,nut=$('biaNutrigram').value.trim();
+  const ecwRatio=(Number.isFinite(ecw)&&Number.isFinite(tbw)&&tbw>0)?ecw/tbw:NaN;
+  const dtbw=(Number.isFinite(tbw)&&Number.isFinite(tbw0)&&tbw0)?(tbw-tbw0)/tbw0*100:NaN;
+  const decw=(Number.isFinite(ecw)&&Number.isFinite(ecw0)&&ecw0)?(ecw-ecw0)/ecw0*100:NaN;
+  const dffm=(Number.isFinite(ffm)&&Number.isFinite(ffm0)&&ffm0)?(ffm-ffm0)/ffm0*100:NaN;
+  const dbcm=(Number.isFinite(bcm)&&Number.isFinite(bcm0)&&bcm0)?(bcm-bcm0)/bcm0*100:NaN;
+  const dmm=(Number.isFinite(mm)&&Number.isFinite(mm0)&&mm0)?(mm-mm0)/mm0*100:NaN;
+  let hydration='';
+  if(hyd==='overhydrated') hydration='<b>Idratazione:</b> HYDRAGRAM riportato come iperidratazione.';
+  else if(hyd==='dehydrated') hydration='<b>Idratazione:</b> HYDRAGRAM riportato come disidratazione.';
+  else if(hyd==='normal') hydration='<b>Idratazione:</b> HYDRAGRAM riportato come normoidratazione.';
+  else if(dz<-2) hydration='<b>Idratazione:</b> vettore serialmente più corto → aumento relativo dell’idratazione; senza ellissi/reference non classifichiamo l’assoluto.';
+  else if(dz>2) hydration='<b>Idratazione:</b> vettore serialmente più lungo → riduzione relativa dell’idratazione; senza ellissi/reference non classifichiamo l’assoluto.';
+  else hydration='<b>Idratazione:</b> vettore sostanzialmente stabile; la classificazione assoluta richiede reference/ellissi o Hydragram.';
+  if(Number.isFinite(oh)) hydration+=` OH riportato ${fmt(oh,1)} L.`;
+  if(Number.isFinite(ecwRatio)) hydration+=` ECW/TBW ${fmt(ecwRatio*100,1)}% (descrittivo, non usato qui come cut-off universale).`;
+  if(Number.isFinite(dtbw)||Number.isFinite(decw)) hydration+=` Trend: TBW ${Number.isFinite(dtbw)?(dtbw>=0?'+':'')+fmt(dtbw,1)+'%':'–'}, ECW ${Number.isFinite(decw)?(decw>=0?'+':'')+fmt(decw,1)+'%':'–'}.`;
+
+  let cell=`<b>Stato bioelettrico:</b> PhA ${fmt(pha,2)}° (${dpha>=0?'+':''}${fmt(dpha,2)}° vs T0).`;
+  if(pha<4.6) cell+=' Valore di attenzione secondo il materiale didattico del corso; non diagnostico da solo.';
+  if(Number.isFinite(phaPct)) cell+=` Percentile PhA ${fmt(phaPct,0)}° percentile${phaPct<5?' → estremamente basso rispetto alla reference':phaPct<10?' → basso rispetto alla reference':''}.`;
+  if(nut) cell+=` NUTRIGRAM/nota: ${nut}.`;
+
+  const fluidConfounded=(hyd==='overhydrated'||dz<-2||(Number.isFinite(decw)&&decw>3));
+  let mass='<b>Masse stimate:</b> ';
+  const parts=[];
+  if(Number.isFinite(dffm)) parts.push(`FFM ${dffm>=0?'+':''}${fmt(dffm,1)}%`);
+  if(Number.isFinite(dbcm)) parts.push(`BCM ${dbcm>=0?'+':''}${fmt(dbcm,1)}%`);
+  if(Number.isFinite(dmm)) parts.push(`MM/SMM ${dmm>=0?'+':''}${fmt(dmm,1)}%`);
+  mass+=parts.length?parts.join(' · '):'inserire T0 e attuale per ottenere i trend.';
+  if(fluidConfounded) mass+=' <b>Attenzione:</b> il pattern idrico può confondere FFM/MM; per la perdita muscolare dare più peso al trend ecografico.';
+  else mass+=' Se l’idratazione è stabile, il trend delle masse stimate è più interpretabile, sempre con reference specifiche del dispositivo.';
+
+  $('bivaInterpretation').innerHTML=`<div class="note ${fluidConfounded?'warn':''}">${hydration}</div><div class="note" style="margin-top:8px">${cell}</div><div class="note" style="margin-top:8px">${mass}</div>`;
 }
 function drawBiva(x0,y0,x1,y1){
   const svg=$('bivaPlot'); const xs=[x0,x1].filter(Number.isFinite), ys=[y0,y1].filter(Number.isFinite); if(!xs.length||!ys.length){svg.innerHTML='';return}
@@ -837,8 +985,89 @@ function drawBiva(x0,y0,x1,y1){
 }
 function dpercent(cur,base){return base?((cur-base)/base*100):NaN}
 function calcUS(){
-  const q=n('rfT')+n('viT'),q0=n('rfT0')+n('viT0'),dq=dpercent(q,q0),dc=dpercent(n('rfCSA'),n('rfCSA0')),dg=dpercent(n('gray'),n('gray0'));
-  $('outQMLT').textContent=fmt(q,1)+' mm';$('outQMLTDelta').textContent=(dq>=0?'+':'')+fmt(dq,1)+'%';$('outCSADelta').textContent=(dc>=0?'+':'')+fmt(dc,1)+'%';$('outGrayDelta').textContent=(dg>=0?'+':'')+fmt(dg,1)+'%';
+  const q=n('rfT')+n('viT'),q0=n('rfT0')+n('viT0'),dq=dpercent(q,q0),dc=dpercent(n('rfCSA'),n('rfCSA0')),dg=dpercent(n('gray'),n('gray0')),dp=dpercent(n('penn'),n('penn0'));
+  $('outQMLT').textContent=fmt(q,1)+' mm';$('outQMLTDelta').textContent=(dq>=0?'+':'')+fmt(dq,1)+'%';$('outCSADelta').textContent=(dc>=0?'+':'')+fmt(dc,1)+'%';$('outPennDelta').textContent=(dp>=0?'+':'')+fmt(dp,1)+'%';$('outGrayDelta').textContent=(dg>=0?'+':'')+fmt(dg,1)+'%';
+  const assess=$('mrcAssessable').value==='yes',mrc=val('mrcSS'),timing=$('usTiming').value;
+  if(assess&&Number.isFinite(mrc)){
+    $('outMRC').textContent=fmt(mrc,0)+'/60';
+    $('outMRCText').textContent=mrc<48?'criterio MRC-SS positivo per ICUAW':'criterio MRC-SS non positivo';
+  }else{$('outMRC').textContent='N.V.';$('outMRCText').textContent='test volontario non valutabile';}
+  let usSignal='trend';
+  if(dp<=-30) usSignal='marcato'; else if(dp<=-15) usSignal='ridotto'; else if(dp<0) usSignal='lieve'; else usSignal='stabile';
+  $('outUSICUAW').textContent=usSignal.toUpperCase();
+  let html='';
+  if(assess&&Number.isFinite(mrc)&&mrc<48){
+    html=`<b>ICUAW clinicamente compatibile: MRC-SS ${fmt(mrc,0)} &lt;48.</b> Il trend ecografico va usato come caratterizzazione/monitoraggio e per cogliere la perdita precedente al momento in cui il paziente è diventato valutabile.`;
+  }else if(assess&&Number.isFinite(mrc)){
+    html=`<b>MRC-SS ${fmt(mrc,0)}: criterio &lt;48 non soddisfatto.</b> L'ecografia può comunque documentare perdita di massa o architettura non ancora tradotta in una MRC patologica.`;
+  }else{
+    html='<b>MRC-SS non eseguibile.</b> In questa fase l’ecografia è utile come marker precoce e non-volitivo; non va trasformata da sola in diagnosi definitiva di ICUAW.';
+  }
+  html+=` Δ pennation RF ${dp>=0?'+':''}${fmt(dp,1)}%; Δ RFCSA ${dc>=0?'+':''}${fmt(dc,1)}%; Δ QMLT ${dq>=0?'+':''}${fmt(dq,1)}%.`;
+  if(timing==='d7'||timing==='late') html+=` Nel vostro studio, tra T1 e T7 il gruppo ICUAW mostrava una riduzione mediana del pennation angle di −36,6% vs −14,7% nei non-ICUAW; ΔPA T7–T1 AUC 0,82 e OR 0,91 per punto percentuale. Non è stato definito un cut-off individuale validato.`;
+  else html+=' Il valore informativo maggiore deriva dal confronto seriale, soprattutto verso il giorno 7, più che dal singolo PA iniziale.';
+  $('icuawInterpretation').innerHTML=html;
+}
+
+function integratedTimingKey(){
+  const sel=$('integratedTiming').value;if(sel!=='auto')return sel;const d=patient().day;if(d<=2)return 't0';if(d<=4)return 'd3';if(d<=7)return 'd7';return 'late';
+}
+function calcIntegrated(){
+  const t=integratedTimingKey(),labels={t0:'0–48 h',d3:'giorno 3',d7:'giorno 7',late:'>7 giorni',recovery:'recupero'};
+  $('outIntTiming').textContent=labels[t]||t;
+  const vo2=n('vo2'),vco2=n('vco2'),ee=1.44*(3.941*vo2+1.106*vco2)-(n('calUN')>0?2.17*n('calUN'):0),rq=vo2>0?vco2/vo2:NaN,cov=ee>0?n('currentKcal')/ee:NaN;
+  let met='REE '+fmt(ee,0)+' kcal';
+  if(Number.isFinite(rq)) met+=' · RQ '+fmt(rq,2);
+  $('outIntMetabolic').textContent=met;
+
+  const p=patient(),rz=n('rz'),xc=n('xc'),rz0=n('rz0'),xc0=n('xc0');
+  const z=Math.hypot(rz,xc),z0=Math.hypot(rz0,xc0),dz=z0?((z-z0)/z0*100):0,pha=Math.atan2(xc,rz)*180/Math.PI,hyd=$('biaHydragram').value;
+  const over=(hyd==='overhydrated'||dz<-2),dry=(hyd==='dehydrated'||dz>2);
+  $('outIntHydration').textContent=over?'SOVRACCARICO / ↑ H₂O':dry?'↓ H₂O':'STABILE / INCERTO';
+
+  const dq=dpercent(n('rfT')+n('viT'),n('rfT0')+n('viT0')),dc=dpercent(n('rfCSA'),n('rfCSA0')),dp=dpercent(n('penn'),n('penn0'));
+  const assess=$('mrcAssessable').value==='yes',mrc=val('mrcSS'),icuaw=assess&&Number.isFinite(mrc)&&mrc<48;
+  const muscleLoss=(dq<-5||dc<-5||dp<-5);
+  $('outIntMuscle').textContent=icuaw?'ICUAW (MRC+)':muscleLoss?'PERDITA SERIALE':'STABILE / MINIMA';
+
+  const blocks=[];
+  let mtxt=`<b>Metabolismo.</b> REE misurata ${fmt(ee,0)} kcal/d, RQ ${fmt(rq,2)}, copertura attuale ${fmt(cov*100,0)}%. `;
+  if(rq>1.0) mtxt+='RQ >1: valutare overfeeding/lipogenesi o artefatto/qualità della misura. ';
+  else if(rq<0.70) mtxt+='RQ <0,70: digiuno/chetosi o artefatto; verificare qualità e contesto. ';
+  else if(cov>1.1) mtxt+='Apporto superiore alla REE misurata: rivalutare il target e le kcal non nutrizionali. ';
+  else if(cov<0.7) mtxt+='Copertura <70% della REE: interpretare in rapporto alla fase di malattia e alla strategia nutrizionale. ';
+  blocks.push(`<div class="note">${mtxt}</div>`);
+
+  let htxt='<b>BIA/BIVA.</b> ';
+  if(over) htxt+='Pattern compatibile con aumento dell’idratazione/sovraccarico. '; else if(dry) htxt+='Pattern compatibile con riduzione dell’idratazione. '; else htxt+='Nessun chiaro spostamento idrico dal trend disponibile. ';
+  htxt+=`PhA ${fmt(pha,2)}°. `;
+  if(pha<4.6) htxt+='PhA basso/di attenzione nel materiale del corso. ';
+  if(over) htxt+='In questo contesto FFM/MM/BCM possono essere distorte dai fluidi: evitare di leggere un apparente mantenimento/aumento come anabolismo.';
+  blocks.push(`<div class="note ${over?'warn':''}" style="margin-top:8px">${htxt}</div>`);
+
+  let utxt=`<b>Muscolo.</b> ΔQMLT ${dq>=0?'+':''}${fmt(dq,1)}%, ΔRFCSA ${dc>=0?'+':''}${fmt(dc,1)}%, Δpennation ${dp>=0?'+':''}${fmt(dp,1)}%. `;
+  if(icuaw) utxt+=`MRC-SS ${fmt(mrc,0)} &lt;48: criterio clinico positivo per ICUAW (dopo esclusione di altre cause). `;
+  else if(!assess) utxt+='MRC non eseguibile: l’ecografia assume valore di screening/anticipazione. ';
+  else utxt+=`MRC-SS ${fmt(mrc,0)}: criterio &lt;48 non soddisfatto. `;
+  if(t==='d7'||t==='late') utxt+='A questo timing il confronto con T0 del pennation angle è particolarmente informativo; nel vostro studio ΔPA T7–T1 era il miglior predittore ecografico di ICUAW.';
+  blocks.push(`<div class="note ${icuaw?'danger':muscleLoss?'warn':''}" style="margin-top:8px">${utxt}</div>`);
+
+  if(over&&muscleLoss){
+    blocks.push('<div class="note danger" style="margin-top:8px"><b>Pattern integrato:</b> sovraccarico idrico + perdita ecografica di muscolo. Il peso e le stime BIA di massa possono mascherare il catabolismo; per il muscolo privilegiare ecografia/funzione, per l’energia la calorimetria.</div>');
+  }else if(!over&&muscleLoss){
+    blocks.push('<div class="note warn" style="margin-top:8px"><b>Pattern integrato:</b> perdita muscolare con idratazione non chiaramente aumentata. La perdita di tessuto è meno facilmente spiegabile da sola variazione di fluidi e merita attenzione nutrizionale/riabilitativa.</div>');
+  }else if(over&&!muscleLoss){
+    blocks.push('<div class="note warn" style="margin-top:8px"><b>Pattern integrato:</b> sovraccarico idrico senza chiara perdita muscolare ecografica. Evitare conclusioni sulla massa basate solo su FFM/MM finché i fluidi non sono più stabili.</div>');
+  }
+  $('integratedInterpretation').innerHTML=blocks.join('');
+
+  let guide='';
+  if(t==='t0') guide='<div class="note"><b>T0 / 0–48 h.</b> Costruire il baseline: REE/RQ se misura valida, vettore/Hydragram e fluidi, RFCSA/QMLT/pennation. Il singolo valore di massa BIA non definisce la perdita acquisita.</div>';
+  else if(t==='d3') guide='<div class="note"><b>Giorno 3.</b> Cercare direzione: accumulo/de-resuscitation, variazioni di PhA/Xc/Rz e primi segni di perdita muscolare. La discordanza BIA–US è attesa se i fluidi cambiano.</div>';
+  else if(t==='d7') guide='<div class="note"><b>Giorno 7.</b> Il trend diventa centrale: Δ pennation/RFCSA/QMLT, MRC se valutabile, REE misurata per adeguare l’energia, BIVA per distinguere fluidi da tessuto.</div>';
+  else if(t==='late') guide='<div class="note"><b>Fase tardiva.</b> Integrare deficit muscolare/funzionale con fabbisogno misurato e stato idrico; cercare mancato recupero, persistenza di catabolismo o sovraccarico.</div>';
+  else guide='<div class="note"><b>Recupero/post-ICU.</b> Obiettivo: recupero di funzione e massa con idratazione stabile; confrontare serialmente US, MRC/HGS e BIA con REE se clinicamente indicata.</div>';
+  $('integratedTimingGuide').innerHTML=guide;
 }
 function balanceRows(){
   let vin=0,vout=0,nkin=0,nkout=0;
@@ -875,7 +1104,7 @@ function calcSodium(){
   html+=`<div class="note" style="margin-top:8px"><b>Stima Na finale:</b> ${fmt(pred,1)} mmol/L. È una mass-balance semplificata, utile per controllo di coerenza, non una previsione affidabile al singolo mmol/L.</div>`;
   $('sodiumInterpretation').innerHTML=html;
 }
-function recalc(){calcRefeeding();calcNutrition();calcCalorimetry();calcBiva();calcUS();calcSodium();saveState()}
+function recalc(){calcRefeeding();calcNutrition();calcCalorimetry();calcBiva();calcUS();calcIntegrated();calcSodium();saveState()}
 
 document.querySelectorAll('.nav button').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active')); b.classList.add('active');
